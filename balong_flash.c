@@ -60,6 +60,7 @@ struct {
   {"WEBUI",0x5b0000},
   {0,0}
 };
+//-d       - попытка переключить модем из режима HDLC в АТ-режим\n\       
 
 while ((opt = getopt(argc, argv, "hp:me")) != -1) {
   switch (opt) {
@@ -178,10 +179,16 @@ if (!open_port(devname))  {
 
 tcsetattr(siofd, TCSANOW, &sioparm);
 tcflush(siofd,TCIOFLUSH);  // очистка выходного буфера
-port_timeout(50);
+
+// выходим из режима HDLC - если модем уже был в нем
+port_timeout(1);
+send_cmd(cmddone,1,replybuf);
+
+
 
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
+port_timeout(50);
 write(siofd,datamodecmd,strlen(datamodecmd));
 res=read(siofd,replybuf,6);
 if (res != 6) {
@@ -198,7 +205,7 @@ if (memcmp(replybuf,OKrsp,6) != 0) {
 printf("ok");
 iolen=send_cmd(cmdver,1,replybuf);
 if ((iolen == 0)||(replybuf[1] != 0x0d)) {
-  printf("\nОшибка команды GET_VERSION\n");
+  printf("\n Ошибка команды GET_VERSION\n");
   if (iolen != 0) dump(replybuf,iolen,0);
   return;
 }  
@@ -210,7 +217,6 @@ printf("\n");
 
 
 // Главный цикл записи разделов
-printf("\n Начало записи разделов");
 for(part=0;part<npart;part++) {
   printf("\n Записываем раздел %i -",part);
   // выводим имя раздела
@@ -231,7 +237,7 @@ for(part=0;part<npart;part++) {
   iolen=send_cmd(cmd_dload_init,12,replybuf);
   if ((iolen == 0) || (replybuf[1] != 2)) {
     printf("\n Заголовок раздела не принят, код ошибки = %02x\n",replybuf[3]);
-    dump(cmd_dload_init,13,0);
+//    dump(cmd_dload_init,13,0);
     return;
   }  
 
@@ -240,7 +246,7 @@ for(part=0;part<npart;part++) {
   blksize=4096;
   fseek(in,ptable[part].offset,SEEK_SET);
   for(blk=0;blk<((ptable[part].size+4095)/4096);blk++) {
-    printf("\r Блок %i из %i",blk,(ptable[part].size+4095)/4096);
+    printf("\r Блок %i из %i",blk,(ptable[part].size+4095)/4096); fflush(stdout);
     res=ptable[part].size+ptable[part].offset-ftell(in);  // размер оставшегося куска до конца файла
     if (res<4096) blksize=res;  // корректируем размер последнего блока
     *(unsigned int*)&cmd_data_packet[1]=htonl(blk+1);  // # пакета
@@ -249,7 +255,7 @@ for(part=0;part<npart;part++) {
     iolen=send_cmd(cmd_data_packet,blksize+7,replybuf); // отсылаем команду
     if ((iolen == 0) || (replybuf[1] != 2)) {
       printf("\n Блок %i раздела не принят, код ошибки = %02x\n",blk,replybuf[3]);
-      dump(cmd_data_packet,blksize+7,0);
+//      dump(cmd_data_packet,blksize+7,0);
       return;
     }  
    }
@@ -272,4 +278,4 @@ port_timeout(1);
 // выходим из режима HDLC
 send_cmd(cmddone,1,replybuf);
 
-}  
+} 
