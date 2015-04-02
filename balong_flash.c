@@ -30,16 +30,18 @@ unsigned char buf[4096];
 unsigned char devname[50]="/dev/ttyUSB0";
 unsigned char replybuf[4096];
 unsigned char datamodecmd[]="AT^DATAMODE";
+unsigned char resetcmd[]="AT^RESET";
 unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 unsigned int  dpattern=0xa55aaa55;
-unsigned int  mflag=0,eflag=0;
+unsigned int  mflag=0,eflag=0,rflag=0;
 unsigned char filename [100];
 
 unsigned char cmdver[7]={0x0c};           // версия протокола
 unsigned char cmddone[7]={0x1};           // команда выхода из HDLC
-unsigned char cmd_dload_init[15]={0x41};  // команда начала пакета
+unsigned char cmd_reset[7]={0xa};           // команда выхода из HDLC
+unsigned char cmd_dload_init[15]={0x41};  // команда начала раздела
 unsigned char cmd_data_packet[11000]={0x42};  // команда начала пакета
-unsigned char cmd_dload_end[30]={0x43};
+unsigned char cmd_dload_end[30]={0x43};       // команда конца раздела
 // Коды типов разделов
 struct {
   char name[20];
@@ -62,7 +64,7 @@ struct {
 };
 //-d       - попытка переключить модем из режима HDLC в АТ-режим\n\       
 
-while ((opt = getopt(argc, argv, "hp:me")) != -1) {
+while ((opt = getopt(argc, argv, "hp:mer")) != -1) {
   switch (opt) {
    case 'h': 
      
@@ -72,6 +74,7 @@ printf("\n Утилита предназначена для аварийной U
 -p <tty> - последовательный порт для общения с загрузчиком (по умолчанию /dev/ttyUSB0\n\
 -m       - вывести карту файла прошивки и завершить работу\n\
 -e       - разобрать файл прошивки на разделы и завершить работу\n\
+-r       - перезагрузить модем после прошивки\n\
 \n",argv[0]);
     return;
 
@@ -81,6 +84,10 @@ printf("\n Утилита предназначена для аварийной U
 
    case 'm':
      mflag=1;
+     break;
+     
+   case 'r':
+     rflag=1;
      break;
      
    case 'e':
@@ -188,7 +195,7 @@ send_cmd(cmddone,1,replybuf);
 
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
-port_timeout(50);
+port_timeout(100);
 write(siofd,datamodecmd,strlen(datamodecmd));
 res=read(siofd,replybuf,6);
 if (res != 6) {
@@ -266,6 +273,9 @@ for(part=0;part<npart;part++) {
    iolen=send_cmd(cmd_dload_end,24,replybuf); // отсылаем команду
   if ((iolen == 0) || (replybuf[1] != 2)) {
     printf("\n Ошибка закрытия раздела, код ошибки = %02x\n",replybuf[3]);
+     dump(replybuf,iolen,0);
+     printf("\nИсходная команда:");
+     dump(cmd_data_packet,24,0);
     return;
   }  
    
@@ -275,7 +285,10 @@ printf("\n");
 
 
 port_timeout(1);
-// выходим из режима HDLC
-send_cmd(cmddone,1,replybuf);
-
+// выходим из режима HDLC и перезагружаемся
+if (rflag) {
+  send_cmd(cmd_reset,1,replybuf);
+  write(siofd,resetcmd,strlen(resetcmd));
+}  
+else send_cmd(cmddone,1,replybuf);
 } 
