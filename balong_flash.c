@@ -31,7 +31,10 @@ unsigned char devname[50]="/dev/ttyUSB0";
 unsigned char replybuf[4096];
 unsigned char datamodecmd[]="AT^DATAMODE";
 unsigned char resetcmd[]="AT^RESET";
+
 unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
+unsigned char NAKrsp[]={0x03, 0x00, 0x02, 0xba, 0x0a, 0x7e};
+
 unsigned int  dpattern=0xa55aaa55;
 unsigned int  mflag=0,eflag=0,rflag=0;
 unsigned char filename [100];
@@ -196,13 +199,24 @@ send_cmd(cmddone,1,replybuf);
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
 port_timeout(100);
+i=0;
+
+rehdlc:
+if (i == 10) {
+  printf("превышено число попыток входа в режим\n");
+  return;
+}  
+  
 write(siofd,datamodecmd,strlen(datamodecmd));
 res=read(siofd,replybuf,6);
 if (res != 6) {
-  printf("\n Неправильный ответ на DATAMODE\n");
+  printf("\n Неправильная длина ответ на DATAMODE\n");
   dump(replybuf,res,0);
   return;
 }  
+i++;
+if (memcmp(replybuf,NAKrsp,6) == 0) goto rehdlc;
+
 if (memcmp(replybuf,OKrsp,6) != 0) {
   printf("\n Неправильный ответ на DATAMODE\n");
   dump(replybuf,res,0);
