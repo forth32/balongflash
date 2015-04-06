@@ -12,7 +12,7 @@
 #include <windows.h>
 #include "printf.h"
 #endif
-
+#include <dirent.h>
 #include "hdlcio.h"
 
 unsigned int nand_cmd=0x1b400000;
@@ -342,4 +342,86 @@ sioparm.c_cc[VTIME]=timeout; // timeout
 sioparm.c_cc[VMIN]=0;  
 tcsetattr(siofd, TCSANOW, &sioparm);
 #endif
+}
+
+//*************************************************
+//*  Поиск файла по номеру в указанном каталоге
+//*
+//* num - # файла
+//* filename - буфер для полного имени файла
+//* id - переменная, в которую будет записан идентификатор раздела
+//*
+//* return 0 - не найдено
+//*        1 - найдено
+//*************************************************
+int find_file(int num, char* dirname, char* filename,unsigned int* id, unsigned int* size) {
+
+DIR* fdir;
+FILE* in;
+unsigned int pt;
+struct dirent* dentry;
+char fpattern[5];
+
+sprintf(fpattern,"%02i",num); // образец для поиска файла по 3 цифрам номера
+fdir=opendir(dirname);
+if (fdir == 0) {
+  printf("\n Каталог %s не открывается\n");
+  exit(1);
+}
+
+// главный цикл - поиск нужного нам файла
+while ((dentry=readdir(fdir)) != 0) {
+  if (dentry->d_type != DT_REG) continue; // пропускаем все кроме регулярных файлов
+  if (strncmp(dentry->d_name,fpattern,2) == 0) break; // нашли нужный файл. Точнее, файл с нужными 3 цифрами в начале имени.
+}
+
+closedir(fdir);
+
+// формируем полное имя файла в буфере результата
+if (dentry == 0) return 0; // не нашли
+strcpy(filename,dirname);
+strcat(filename,"/");
+// копируем имя файла в буфер результата
+strcat(filename,dentry->d_name);  
+
+// 00-00000200-M3Boot.bin
+//проверяем имя файла на наличие знаков '-'
+if ((dentry->d_name[2] != '-') || (dentry->d_name[11] != '-')) {
+  printf("\n Неправильный формат имени файла - %s\n",dentry->d_name);
+  exit(1);
+}
+
+// проверяем цифровое поле ID раздела
+if (strspn(dentry->d_name+3,"0123456789AaBbCcDdEeFf") != 8) {
+  printf("\n Ошибка в идентификаторе раздела - нецифрвой знак - %s\n",filename);
+  exit(1);
+}  
+sscanf(dentry->d_name+3,"%8x",id);
+
+// Проверяем доступность и читаемость файла
+in=fopen(filename,"r");
+if (in == 0) {
+  printf("\n Ошибка открытия файла %s\n",filename);
+  exit(1);
+}
+if (fread(&pt,1,4,in) != 4) {
+  printf("\n Ошибка чтения файла %s\n",filename);
+  exit(1);
+}
+  
+// проверяем, что файл - сырой образ, без заголовка
+if (pt == 0xa55aaa55) {
+  printf("\n Файл %s имеет заголовок - для прошивки не подходит\n",filename);
+  exit(1);
+}
+
+
+// Что еще можно проверить? Пока не придумал.  
+
+//  Получаем размер файла
+fseek(in,0,SEEK_END);
+*size=ftell(in);
+fclose(in);
+
+return 1;
 }
