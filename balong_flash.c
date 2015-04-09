@@ -329,15 +329,11 @@ if (memcmp(replybuf,OKrsp,6) != 0) {
   return;
 }  
 
-printf("ok");
 iolen=send_cmd(cmdver,1,replybuf);
-if ((iolen == 0)||(replybuf[1] != 0x0d)) {
-  printf("\n Ошибка команды GET_VERSION\n");
-  if (iolen != 0) dump(replybuf,iolen,0);
-  return;
-}  
+if ((iolen == 0)||(replybuf[1] != 0x0d))   goto rehdlc;
 i=replybuf[2];
 replybuf[3+i]=0;
+printf("ok");
 printf("\n Версия протокола: %s",replybuf+3);
 printf("\n");
 
@@ -355,9 +351,9 @@ for(part=0;part<npart;part++) {
   iolen=send_cmd(cmd_dload_init,12,replybuf);
   if ((iolen == 0) || (replybuf[1] != 2)) {
     printf("\n Заголовок раздела не принят, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
-    dump(cmd_dload_init,13,0);
+//    dump(cmd_dload_init,13,0);
     printf("\nreply\n");
-    dump(replybuf,iolen,0);
+//    dump(replybuf,iolen,0);
     return;
   }  
 
@@ -395,9 +391,9 @@ for(part=0;part<npart;part++) {
    iolen=send_cmd(cmd_dload_end,24,replybuf); // отсылаем команду
   if ((iolen == 0) || (replybuf[1] != 2)) {
     printf("\n Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",blk,replybuf[1],replybuf[2],replybuf[3]);
-     dump(replybuf,iolen,0);
+//     dump(replybuf,iolen,0);
      printf("\nИсходная команда:");
-     dump(cmd_data_packet,24,0);
+//     dump(cmd_data_packet,24,0);
     return;
   }  
    
