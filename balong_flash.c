@@ -90,6 +90,7 @@ unsigned char devname[50]="/dev/ttyUSB0";
 unsigned char replybuf[4096];
 unsigned char datamodecmd[]="AT^DATAMODE";
 unsigned char resetcmd[]="AT^RESET";
+unsigned int err;
 
 unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 unsigned char NAKrsp[]={0x03, 0x00, 0x02, 0xba, 0x0a, 0x7e};
@@ -305,27 +306,34 @@ send_cmd(cmddone,1,replybuf);
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
 port_timeout(100);
-i=0;
 
-rehdlc:
-if (i == 10) {
-  printf("превышено число попыток входа в режим\n");
+
+for (err=0;err<10;err++) {
+
+if (err == 10) {
+  printf("\n Превышено число попыток входа в режим\n");
   return;
 }  
   
 write(siofd,datamodecmd,strlen(datamodecmd));
 res=read(siofd,replybuf,6);
 if (res != 6) {
-  printf("\n Неправильная длина ответ на DATAMODE\n");
-  dump(replybuf,res,0);
-  return;
+  printf("\n Неправильная длина ответа на ^DATAMODE, повторяем попытку...");
+  continue;
 }  
-i++;
-//if (memcmp(replybuf,NAKrsp,6) == 0) goto rehdlc;
-if (memcmp(replybuf,OKrsp,6) != 0) goto rehdlc;
+if (memcmp(replybuf,OKrsp,6) != 0) {
+  printf("\n Команда ^DATAMODE отвергнута, повторяем попытку...");
+  continue;
+}  
 
 iolen=send_cmd(cmdver,1,replybuf);
-if ((iolen == 0)||(replybuf[1] != 0x0d))   goto rehdlc;
+if ((iolen == 0)||(replybuf[1] != 0x0d)) {
+  printf("\n Ошибка получения версии протокола, повторяем попытку...");
+  continue;
+}  
+break;
+}
+  
 i=replybuf[2];
 replybuf[3+i]=0;
 printf("ok");
@@ -337,7 +345,7 @@ if ((optind>=argc)&rflag) goto reset; // перезагрузка без ука�
 
 // Главный цикл записи разделов
 for(part=0;part<npart;part++) {
-  printf("\n Записываем раздел %i - %s",part,ptable[part].pname);
+  printf("\n Записываем раздел %i - %s\n",part,ptable[part].pname);
   
   // заполняем командный пакет
   *((unsigned int*)&cmd_dload_init[1])=htonl(ptable[part].code);  
@@ -347,8 +355,6 @@ for(part=0;part<npart;part++) {
   if ((iolen == 0) || (replybuf[1] != 2)) {
     printf("\n Заголовок раздела не принят, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
 //    dump(cmd_dload_init,13,0);
-    printf("\nreply\n");
-//    dump(replybuf,iolen,0);
     return;
   }  
 
@@ -385,10 +391,8 @@ for(part=0;part<npart;part++) {
    *((unsigned int*)&cmd_dload_end[8])=htonl(ptable[part].code);
    iolen=send_cmd(cmd_dload_end,24,replybuf); // отсылаем команду
   if ((iolen == 0) || (replybuf[1] != 2)) {
-    printf("\n Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",blk,replybuf[1],replybuf[2],replybuf[3]);
+    printf("\n Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
 //     dump(replybuf,iolen,0);
-     printf("\nИсходная команда:");
-//     dump(cmd_data_packet,24,0);
     return;
   }  
    
