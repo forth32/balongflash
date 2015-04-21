@@ -23,7 +23,7 @@ struct {
   int code;
 } pcodes[]={ 
   {"M3Boot",0x20000}, 
-  {"M3Boot",0x10000}, 
+  {"M3Boot-ptable",0x10000}, 
   {"M3Boot_R11",0x200000}, 
   {"Ptable",0x10000},
   {"Fastboot",0x110000},
@@ -321,13 +321,8 @@ if (res != 6) {
   return;
 }  
 i++;
-if (memcmp(replybuf,NAKrsp,6) == 0) goto rehdlc;
-
-if (memcmp(replybuf,OKrsp,6) != 0) {
-  printf("\n Неправильный ответ на DATAMODE\n");
-  dump(replybuf,res,0);
-  return;
-}  
+//if (memcmp(replybuf,NAKrsp,6) == 0) goto rehdlc;
+if (memcmp(replybuf,OKrsp,6) != 0) goto rehdlc;
 
 iolen=send_cmd(cmdver,1,replybuf);
 if ((iolen == 0)||(replybuf[1] != 0x0d))   goto rehdlc;
