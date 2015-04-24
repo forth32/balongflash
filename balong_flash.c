@@ -345,7 +345,7 @@ if ((optind>=argc)&rflag) goto reset; // перезагрузка без ука�
 
 // Главный цикл записи разделов
 for(part=0;part<npart;part++) {
-  printf("\n Записываем раздел %i - %s\n",part,ptable[part].pname);
+  printf("\r Записываем раздел %i - %s\n",part,ptable[part].pname);
   
   // заполняем командный пакет
   *((unsigned int*)&cmd_dload_init[1])=htonl(ptable[part].code);  
