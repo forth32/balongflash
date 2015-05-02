@@ -85,7 +85,7 @@ struct {
   unsigned char filename[50]; // имя файла, соответствующее разделу
 }ptable[100];
 
-unsigned char buf[4096];
+unsigned char buf[40960];
 unsigned char devname[50]="/dev/ttyUSB0";
 unsigned char replybuf[4096];
 unsigned char datamodecmd[]="AT^DATAMODE";
