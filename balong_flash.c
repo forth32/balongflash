@@ -23,9 +23,11 @@ struct {
   int code;
 } pcodes[]={ 
   {"M3Boot",0x20000}, 
+  {"M3Boot-ptable",0x10000}, 
   {"M3Boot_R11",0x200000}, 
   {"Ptable",0x10000},
   {"Fastboot",0x110000},
+  {"Logo",0x130000},
   {"Kernel",0x30000},
   {"Kernel_R11",0x90000},
   {"VxWorks",0x40000},
@@ -34,13 +36,26 @@ struct {
   {"M3Image_R11",0x230000},
   {"DSP",0x60000},
   {"DSP_R11",0x240000},
-  {"NVRAM",0x70000},
-  {"NVRAM_R11",0x250000},
+  {"Nvdload",0x70000},
+  {"Nvdload_R11",0x250000},
+  {"Nvimg",0x80000},
   {"System",0x590000},
+  {"System",0x100000},
+  {"APP",0x570000}, 
   {"APP",0x5a0000}, 
-  {"CD_WUI_VER",0xa0000},
+  {"Oeminfo",0xa0000},
   {"CDROMISO",0xb0000},
+  {"Oeminfo",0x550000},
+  {"Oeminfo",0x510000},
+  {"Oeminfo",0x1a0000},
+  {"WEBUI",0x560000},
   {"WEBUI",0x5b0000},
+  {"Wimaxcfg",0x170000},
+  {"Wimaxcrf",0x180000},
+  {"Userdata",0x190000},
+  {"Online",0x1b0000},
+  {"Online",0x5d0000},
+  {"Online",0x5e0000},
   {0,0}
 };
 
@@ -75,6 +90,7 @@ unsigned char devname[50]="/dev/ttyUSB0";
 unsigned char replybuf[4096];
 unsigned char datamodecmd[]="AT^DATAMODE";
 unsigned char resetcmd[]="AT^RESET";
+unsigned int err;
 
 unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 unsigned char NAKrsp[]={0x03, 0x00, 0x02, 0xba, 0x0a, 0x7e};
@@ -290,39 +306,37 @@ send_cmd(cmddone,1,replybuf);
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
 port_timeout(100);
-i=0;
 
-rehdlc:
-if (i == 10) {
-  printf("превышено число попыток входа в режим\n");
+
+for (err=0;err<10;err++) {
+
+if (err == 10) {
+  printf("\n Превышено число попыток входа в режим\n");
   return;
 }  
   
 write(siofd,datamodecmd,strlen(datamodecmd));
 res=read(siofd,replybuf,6);
 if (res != 6) {
-  printf("\n Неправильная длина ответ на DATAMODE\n");
-  dump(replybuf,res,0);
-  return;
+  printf("\n Неправильная длина ответа на ^DATAMODE, повторяем попытку...");
+  continue;
 }  
-i++;
-if (memcmp(replybuf,NAKrsp,6) == 0) goto rehdlc;
-
 if (memcmp(replybuf,OKrsp,6) != 0) {
-  printf("\n Неправильный ответ на DATAMODE\n");
-  dump(replybuf,res,0);
-  return;
+  printf("\n Команда ^DATAMODE отвергнута, повторяем попытку...");
+  continue;
 }  
 
-printf("ok");
 iolen=send_cmd(cmdver,1,replybuf);
 if ((iolen == 0)||(replybuf[1] != 0x0d)) {
-  printf("\n Ошибка команды GET_VERSION\n");
-  if (iolen != 0) dump(replybuf,iolen,0);
-  return;
+  printf("\n Ошибка получения версии протокола, повторяем попытку...");
+  continue;
 }  
+break;
+}
+  
 i=replybuf[2];
 replybuf[3+i]=0;
+printf("ok");
 printf("\n Версия протокола: %s",replybuf+3);
 printf("\n");
 
@@ -331,7 +345,7 @@ if ((optind>=argc)&rflag) goto reset; // перезагрузка без ука�
 
 // Главный цикл записи разделов
 for(part=0;part<npart;part++) {
-  printf("\n Записываем раздел %i - %s",part,ptable[part].pname);
+  printf("\r Записываем раздел %i - %s\n",part,ptable[part].pname);
   
   // заполняем командный пакет
   *((unsigned int*)&cmd_dload_init[1])=htonl(ptable[part].code);  
@@ -340,9 +354,7 @@ for(part=0;part<npart;part++) {
   iolen=send_cmd(cmd_dload_init,12,replybuf);
   if ((iolen == 0) || (replybuf[1] != 2)) {
     printf("\n Заголовок раздела не принят, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
-    dump(cmd_dload_init,13,0);
-    printf("\nreply\n");
-    dump(replybuf,iolen,0);
+//    dump(cmd_dload_init,13,0);
     return;
   }  
 
@@ -379,10 +391,8 @@ for(part=0;part<npart;part++) {
    *((unsigned int*)&cmd_dload_end[8])=htonl(ptable[part].code);
    iolen=send_cmd(cmd_dload_end,24,replybuf); // отсылаем команду
   if ((iolen == 0) || (replybuf[1] != 2)) {
-    printf("\n Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",blk,replybuf[1],replybuf[2],replybuf[3]);
-     dump(replybuf,iolen,0);
-     printf("\nИсходная команда:");
-     dump(cmd_data_packet,24,0);
+    printf("\n Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
+//     dump(replybuf,iolen,0);
     return;
   }  
    

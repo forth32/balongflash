@@ -1,6 +1,6 @@
 CC       = gcc
 LIBS     = 
-CFLAGS   = -O2 -g -Wno-unused-result
+CFLAGS   = -O2  -Wno-unused-result
 
 .PHONY: all clean
 

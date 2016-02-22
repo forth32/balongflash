@@ -42,7 +42,7 @@ unsigned int i,j;
 char ch;
 
 for (i=0;i<len;i+=16) {
-  printf("%08x: ",(unsigned long)(base+i));
+  printf("%08lx: ",(unsigned long)(base+i));
   for (j=0;j<16;j++){
    if ((i+j) < len) printf("%02x ",buffer[i+j]&0xff);
    else printf("   ");
@@ -365,7 +365,7 @@ char fpattern[5];
 sprintf(fpattern,"%02i",num); // образец для поиска файла по 3 цифрам номера
 fdir=opendir(dirname);
 if (fdir == 0) {
-  printf("\n Каталог %s не открывается\n");
+  printf("\n Каталог %s не открывается\n",dirname);
   exit(1);
 }
 
