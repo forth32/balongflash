@@ -4,14 +4,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef WIN32
 #include <strings.h>
 #include <termios.h>
 #include <unistd.h>
-#else
-#include <windows.h>
-#include "printf.h"
-#endif
 #include <dirent.h>
 #include "hdlcio.h"
 
@@ -25,11 +20,7 @@ char flash_descr[30]={0};
 unsigned int oobsize=0;
 
 
-#ifndef WIN32
 struct termios sioparm;
-#else
-static HANDLE hSerial;
-#endif
 int siofd; // fd для работы с Последовательным портом
 
 
@@ -107,30 +98,6 @@ for(i=0;i<len;i++)  crc=crctab[(buf[i]^crc)&0xff]^((crc>>8)&0xff);
 return (~crc)&0xffff;
 }
 
-#ifdef WIN32
-
-static int read(int siofd, unsigned char* buf, int len)
-{
-    DWORD bytes_read = 0;
-    DWORD t = GetTickCount();
-
-    do {
-        ReadFile(hSerial, buf, len, &bytes_read, NULL);
-    } while (bytes_read == 0 && GetTickCount() - t < 1000);
-
-    return bytes_read;
-}
-
-static int write(int siofd, unsigned char* buf, int len)
-{
-    DWORD bytes_written = 0;
-
-    WriteFile(hSerial, buf, len, &bytes_written, NULL);
-
-    return bytes_written;
-}
-
-#endif
 
 //*************************************************
 //*    отсылка буфера в модем
@@ -138,19 +105,11 @@ static int write(int siofd, unsigned char* buf, int len)
 unsigned int send_unframed_buf(char* outcmdbuf, unsigned int outlen) {
 
 
-#ifndef WIN32
 tcflush(siofd,TCIOFLUSH);  // сбрасываем недочитанный буфер ввода
-#else
-PurgeComm(hSerial, PURGE_RXCLEAR);
-#endif
 write(siofd,"\x7e",1);  // отсылаем префикс
 
 if (write(siofd,outcmdbuf,outlen) == 0) {   printf("\n Ошибка записи команды");return 0;  }
-#ifndef WIN32
 tcdrain(siofd);  // ждем окончания вывода блока
-#else
-FlushFileBuffers(hSerial);
-#endif
 return 1;
 }
 
@@ -221,9 +180,6 @@ return iolen;
 
 }
 
-
-//##############33
-
 //***********************************************************
 //* Преобразование командного буфера с Escape-подстановкой
 //***********************************************************
@@ -284,7 +240,6 @@ return receive_reply(iobuf,0);
 
 int open_port(char* devname)
 {
-#ifndef WIN32
 siofd = open(devname, O_RDWR | O_NOCTTY |O_SYNC);
 if (siofd == -1) return 0;
 
@@ -297,34 +252,6 @@ sioparm.c_cc[VTIME]=30; // timeout
 sioparm.c_cc[VMIN]=0;  
 tcsetattr(siofd, TCSANOW, &sioparm);
 return 1;
-#else
-    char device[20] = "\\\\.\\COM";
-    DCB dcbSerialParams = {0};
-
-    strcat(device, devname);
-    
-    hSerial = CreateFileA(device, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-    if (hSerial == INVALID_HANDLE_VALUE)
-        return 0;
-
-    dcbSerialParams.DCBlength=sizeof(dcbSerialParams);
-    if (!GetCommState(hSerial, &dcbSerialParams))
-    {
-        CloseHandle(hSerial);
-        return 0;
-    }
-    dcbSerialParams.BaudRate=CBR_115200;
-    dcbSerialParams.ByteSize=8;
-    dcbSerialParams.StopBits=ONESTOPBIT;
-    dcbSerialParams.Parity=NOPARITY;
-    if(!SetCommState(hSerial, &dcbSerialParams))
-    {
-        CloseHandle(hSerial);
-        return 0;
-    }
-
-    return 1;
-#endif
 }
 
 //*************************************
@@ -332,7 +259,6 @@ return 1;
 //*************************************
 
 void port_timeout(int timeout) {
-#ifndef WIN32
 bzero(&sioparm, sizeof(sioparm)); // готовим блок атрибутов termios
 sioparm.c_cflag = B115200 | CS8 | CLOCAL | CREAD ;
 sioparm.c_iflag = 0;  // INPCK;
@@ -341,7 +267,6 @@ sioparm.c_lflag = 0;
 sioparm.c_cc[VTIME]=timeout; // timeout  
 sioparm.c_cc[VMIN]=0;  
 tcsetattr(siofd, TCSANOW, &sioparm);
-#endif
 }
 
 //*************************************************

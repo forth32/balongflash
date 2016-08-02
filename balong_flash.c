@@ -11,6 +11,9 @@
 
 #include "hdlcio.h"
 
+unsigned char replybuf[4096];
+
+
 //******************************************************
 //*  поиск символического имени раздела по его коду
 //******************************************************
@@ -66,12 +69,65 @@ if (pcodes[j].code != 0) strcpy(pname,pcodes[j].name); // имя найдено 
 else sprintf(pname,"U%08x",id); // имя не найдено - подставляем псевдоимя Uxxxxxxxx в тупоконечном формате
 }
 
+//****************************************************
+//*  Отсылка модему АТ-команды
+//*  
+//* cmd - буфер с командой
+//* rbuf - буфер для записи ответа
+//*
+//* Возвращает длину ответа
+//****************************************************
+int atcmd(char* cmd, char* rbuf) {
 
+int res;
+char cbuf[128];
+
+strcpy(cbuf,"AT");
+strcat(cbuf,cmd);
+strcat(cbuf,"\r");
+
+port_timeout(100);
+// Вычищаем буфер приемника и передатчика
+tcflush(siofd,TCIOFLUSH);
+
+// отправка команды
+write(siofd,cbuf,strlen(cbuf));
+usleep(100000);
+
+// чтение результата
+res=read(siofd,rbuf,200);
+return res;
+}
+  
+//****************************************************
+//* Определение версии прошивальщика
+//*
+//*   0 - нет ответа на команду
+//*   1 - версия 2.0
+//*  -1 - версия не 2.0 
+//****************************************************
+int dloadversion() {
+
+int res;  
+int i;  
+
+res=atcmd("^DLOADVER?",replybuf);
+if (res == 0) return 0;
+if (strncmp(replybuf+2,"2.0",3) == 0) return 1;
+for (i=2;i<res;i++) {
+  if (replybuf[i] == 0x0d) replybuf[i]=0;
+}  
+printf("! Неправильная версия монитора прошивки - [%i]%s\n",res,replybuf+2);
+dump(replybuf,res,0);
+return -1;
+}
+  
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 void main(int argc, char* argv[]) {
 
-unsigned int i,j,res,opt,npart=0,iolen,part,blk,blksize;
+unsigned int i,j,opt,npart=0,iolen,part,blk,blksize;
+int res;
 FILE* in;
 FILE* out;
 
@@ -87,16 +143,21 @@ struct {
 
 unsigned char buf[40960];
 unsigned char devname[50]="/dev/ttyUSB0";
-unsigned char replybuf[4096];
-unsigned char datamodecmd[]="AT^DATAMODE";
-unsigned char resetcmd[]="AT^RESET";
+
+unsigned char* signver[2]={
+  "^SIGNVER=1,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,2958",  // прошивка
+  "^SIGNVER=6,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,1110"   // морда
+};
 unsigned int err;
 
 unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 unsigned char NAKrsp[]={0x03, 0x00, 0x02, 0xba, 0x0a, 0x7e};
+// ответ на ^signver
+unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 
 unsigned int  dpattern=0xa55aaa55;
 unsigned int  mflag=0,eflag=0,rflag=0,sflag=0,nflag=0;
+int gflag=-1;
 unsigned char filename [100];
 
 unsigned char fdir[40];   // каталог для мультифайловой прошивки
@@ -110,7 +171,7 @@ unsigned char cmd_dload_end[30]={0x43};       // команда конца ра�
 // Коды типов разделов
 //-d       - попытка переключить модем из режима HDLC в АТ-режим\n\       
 
-while ((opt = getopt(argc, argv, "hp:mersn")) != -1) {
+while ((opt = getopt(argc, argv, "hp:mersng")) != -1) {
   switch (opt) {
    case 'h': 
      
@@ -119,6 +180,7 @@ printf("\n Утилита предназначена для прошивки м�
  Допустимы следующие ключи:\n\n\
 -p <tty> - последовательный порт для общения с загрузчиком (по умолчанию /dev/ttyUSB0)\n\
 -n       - режим мультифайловой прошивки из указанного каталога\n\
+-g       - прошивки в режиме цифровой подписи\n\
 -m       - вывести карту файла прошивки и завершить работу\n\
 -e       - разобрать файл прошивки на разделы без заголовков\n\
 -s       - разобрать файл прошивки на разделы с заголовками\n\
@@ -150,6 +212,10 @@ printf("\n Утилита предназначена для прошивки м�
      sflag=1;
      break;
 
+   case 'g':
+     gflag=10;
+     break;
+     
    case '?':
    case ':':  
      return;
@@ -283,14 +349,18 @@ sio:
 //--------- Основной режим - запись прошивки
 //--------------------------------------------
 
+// определяем режим цифровой подписи
+if (gflag == 10) {
+  if (strcmp(ptable[0].pname,"Oeminfo") == 0) gflag=1; // режим вебморды
+  else gflag=0; // режим прошивки
+  printf("\nРежим цифровой подписи: %s",gflag?"Webui":"Firmware");
+}  
+  
+  
 // Настройка SIO
 
 if (!open_port(devname))  {
-#ifndef WIN32
    printf("\n - Последовательный порт %s не открывается\n", devname); 
-#else
-   printf("\n - Последовательный порт COM%s не открывается\n", devname); 
-#endif
    return; 
 }
 
@@ -298,15 +368,29 @@ if (!open_port(devname))  {
 tcflush(siofd,TCIOFLUSH);  // очистка выходного буфера
 
 // выходим из режима HDLC - если модем уже был в нем
-port_timeout(1);
-send_cmd(cmddone,1,replybuf);
+// port_timeout(1);
+// send_cmd(cmddone,1,replybuf);
+// usleep(100000);
+res=dloadversion();
+if (res == -1) return;
+if (res == 0) {
+  printf("\n Модем уже находится в HDLC-режиме");
+  goto hdlc;
+}
 
-
+// Если надо, отправляем команду цифровой подписи
+if (gflag != -1) {
+ printf("\n Отправлем signver...");
+ res=atcmd(signver[gflag],replybuf);
+ if (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) {
+   printf("\n Ошибка проверки цифровой сигнатуры\n");
+   dump(replybuf,res,0);
+   return;
+}
+}
 
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
-port_timeout(100);
-
 
 for (err=0;err<10;err++) {
 
@@ -315,30 +399,37 @@ if (err == 10) {
   return;
 }  
   
-write(siofd,datamodecmd,strlen(datamodecmd));
-res=read(siofd,replybuf,6);
+usleep(100000);
+res=atcmd("^DATAMODE",replybuf);
 if (res != 6) {
   printf("\n Неправильная длина ответа на ^DATAMODE, повторяем попытку...");
+  dump(replybuf,res,0);
   continue;
 }  
 if (memcmp(replybuf,OKrsp,6) != 0) {
   printf("\n Команда ^DATAMODE отвергнута, повторяем попытку...");
-  continue;
-}  
-
-iolen=send_cmd(cmdver,1,replybuf);
-if ((iolen == 0)||(replybuf[1] != 0x0d)) {
-  printf("\n Ошибка получения версии протокола, повторяем попытку...");
+  dump(replybuf,res,0);
   continue;
 }  
 break;
 }
+
+// Вошли в HDLC
+//------------------------------
+hdlc:
+
+iolen=send_cmd(cmdver,1,replybuf);
+if ((iolen == 0)||(replybuf[1] != 0x0d)) {
+  printf("\n Ошибка получения версии протокола\n");
+  return;
+}  
   
 i=replybuf[2];
 replybuf[3+i]=0;
 printf("ok");
 printf("\n Версия протокола: %s",replybuf+3);
 printf("\n");
+
 
 if ((optind>=argc)&rflag) goto reset; // перезагрузка без указания файла
 
@@ -408,7 +499,7 @@ reset:
 if (rflag) {
   printf("\n Перезарузка модема...\n");
   send_cmd(cmd_reset,1,replybuf);
-  write(siofd,resetcmd,strlen(resetcmd));
+  atcmd("^RESET",replybuf);
 }  
 else send_cmd(cmddone,1,replybuf);
 } 
