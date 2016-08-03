@@ -16,5 +16,8 @@ clean:
 hdlcio.o: hdlcio.c
 	$(CC) -c hdlcio.c
 
-balong_flash: balong_flash.o hdlcio.o
+ptable.o: ptable.c
+	$(CC) -c ptable.c
+
+balong_flash: balong_flash.o hdlcio.o ptable.o
 	@gcc $^ -o $@ $(LIBS)
