@@ -144,10 +144,7 @@ struct {
 unsigned char buf[40960];
 unsigned char devname[50]="/dev/ttyUSB0";
 
-unsigned char* signver[2]={
-  "^SIGNVER=1,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,2958",  // прошивка
-  "^SIGNVER=6,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,1110"   // морда
-};
+unsigned char signver[]="^SIGNVER=1,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,2958";
 unsigned int err;
 
 unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
@@ -157,7 +154,7 @@ unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0
 
 unsigned int  dpattern=0xa55aaa55;
 unsigned int  mflag=0,eflag=0,rflag=0,sflag=0,nflag=0;
-int gflag=-1;
+int gflag=0;
 unsigned char filename [100];
 
 unsigned char fdir[40];   // каталог для мультифайловой прошивки
@@ -213,7 +210,7 @@ printf("\n Утилита предназначена для прошивки м�
      break;
 
    case 'g':
-     gflag=10;
+     gflag=1;
      break;
      
    case '?':
@@ -349,14 +346,6 @@ sio:
 //--------- Основной режим - запись прошивки
 //--------------------------------------------
 
-// определяем режим цифровой подписи
-if (gflag == 10) {
-  if (strcmp(ptable[0].pname,"Oeminfo") == 0) gflag=1; // режим вебморды
-  else gflag=0; // режим прошивки
-  printf("\nРежим цифровой подписи: %s",gflag?"Webui":"Firmware");
-}  
-  
-  
 // Настройка SIO
 
 if (!open_port(devname))  {
@@ -367,10 +356,6 @@ if (!open_port(devname))  {
 
 tcflush(siofd,TCIOFLUSH);  // очистка выходного буфера
 
-// выходим из режима HDLC - если модем уже был в нем
-// port_timeout(1);
-// send_cmd(cmddone,1,replybuf);
-// usleep(100000);
 res=dloadversion();
 if (res == -1) return;
 if (res == 0) {
@@ -379,12 +364,11 @@ if (res == 0) {
 }
 
 // Если надо, отправляем команду цифровой подписи
-if (gflag != -1) {
+if (gflag) {
  printf("\n Отправлем signver...");
- res=atcmd(signver[gflag],replybuf);
+ res=atcmd(signver,replybuf);
  if (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) {
    printf("\n Ошибка проверки цифровой сигнатуры\n");
-   dump(replybuf,res,0);
    return;
 }
 }
@@ -392,27 +376,18 @@ if (gflag != -1) {
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
 
-for (err=0;err<10;err++) {
-
-if (err == 10) {
-  printf("\n Превышено число попыток входа в режим\n");
-  return;
-}  
-  
 usleep(100000);
 res=atcmd("^DATAMODE",replybuf);
 if (res != 6) {
-  printf("\n Неправильная длина ответа на ^DATAMODE, повторяем попытку...");
-  dump(replybuf,res,0);
-  continue;
+  printf("\n Неправильная длина ответа на ^DATAMODE");
+//   dump(replybuf,res,0);
+  return;
 }  
 if (memcmp(replybuf,OKrsp,6) != 0) {
-  printf("\n Команда ^DATAMODE отвергнута, повторяем попытку...");
-  dump(replybuf,res,0);
-  continue;
+  printf("\n Команда ^DATAMODE отвергнута, возможно требуетс режим цифровой подписи\n");
+//   dump(replybuf,res,0);
+  return;
 }  
-break;
-}
 
 // Вошли в HDLC
 //------------------------------
