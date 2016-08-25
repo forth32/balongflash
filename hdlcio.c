@@ -254,7 +254,16 @@ for(i=0;i<strlen(devname);i++) {
   if ((devname[i]<'0') || (devname[i]>'9')) dflag=0;
 }
 // Если в строке - только цифры, добавляем префикс /dev/ttyUSB
+
+#ifndef __CYGWIN__
 if (dflag) strcpy(devstr,"/dev/ttyUSB");
+#else
+if (dflag) {
+strcpy(devstr,"/dev/ttyS");
+sprintf(devname, "%d", atoi(devname) - 1);
+}
+#endif
+
 // копируем имя устройства
 strcat(devstr,devname);
 
