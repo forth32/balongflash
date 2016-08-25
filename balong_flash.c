@@ -17,8 +17,6 @@ unsigned char replybuf[4096];
 
 // Цифровые подписи
 
-unsigned char signhash[]="778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697"; // параметр 2 - hash
-
 struct {
   uint8_t type;
   uint32_t len;
@@ -29,9 +27,10 @@ struct {
   {2,1110,"Вебинтерфейс+ISO для HLINK-модема"},
   {6,1110,"Вебинтерфейс+ISO для HLINK-модема"},
   {2,846,"ISO (dashboard) для stick-модема"},
+  {99,1110,"универсальная"},
 };
 
-#define signbaselen 5
+#define signbaselen 6
 
 struct {
   uint8_t code;
@@ -130,8 +129,7 @@ else {
 }
 
 gflag=1;
-sprintf(signver,"AT^SIGNVER=%i,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,%i",signtype,signlen);
-
+sprintf(signver,"^SIGNVER=%i,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,%i",signtype,signlen);
 printf("\n Режим цифровой подписи: %s (%i байт)",fw_description(signtype),signlen);
 // printf("\nstr - %s",signver);
 return;
@@ -403,7 +401,7 @@ if (res != 6) {
   return;
 }  
 if (memcmp(replybuf,OKrsp,6) != 0) {
-  printf("\n Команда ^DATAMODE отвергнута, возможно требуетс режим цифровой подписи\n");
+  printf("\n Команда ^DATAMODE отвергнута, возможно требуется режим цифровой подписи\n");
 //   dump(replybuf,res,0);
   return;
 }  
