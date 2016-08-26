@@ -492,6 +492,7 @@ if (rflag) {
   printf("\n Перезарузка модема...\n");
   send_cmd(cmd_reset,1,replybuf);
   atcmd("^RESET",replybuf);
-}  
-else send_cmd(cmddone,1,replybuf);
+}
+// выход из HDLC пока выкидываем  
+//else send_cmd(cmddone,1,replybuf);
 } 
