@@ -503,6 +503,6 @@ if (rflag || !kflag) {
   send_cmd(cmd_reset,1,replybuf);
   atcmd("^RESET",replybuf);
 }
-// выход из HDLC пока выкидываем  
-//else send_cmd(cmddone,1,replybuf);
+// выход из HDLC   
+else send_cmd(cmddone,1,replybuf);
 } 

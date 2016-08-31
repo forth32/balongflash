@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 #include "ptable.h"
 //******************************************************
 //*  поиск символического имени раздела по его коду
@@ -65,26 +66,49 @@ else sprintf(pname,"U%08x",id); // имя не найдено - подставл
 //*******************************************************
 int findparts(FILE* in, struct ptb_t* ptable) {
 
+// структура описания заголовка раздела
+struct {
+ uint32_t magic;    //   0xa55aaa55
+ uint32_t hdsize;   // размер заголовка
+ uint32_t hdversion;
+ uint8_t unlock[8];
+ uint32_t code;     // тип раздела
+ uint32_t psize;    // разме поля данных
+ uint8_t date[16];
+ uint8_t time[16];  // дата-время сборки прошивки
+ uint8_t version[32];   // версия пршоивки
+ uint16_t crc;   // CRC заголовка
+ uint16_t blocksize;
+} header; 
 // Маркер начала заголовка раздела	      
 const unsigned int dpattern=0xa55aaa55;
 unsigned int i,npart=0;
-char buf[200];
 
 while (fread(&i,1,4,in) == 4) {
   if (i != dpattern) continue; // ищем разделитель
     
   // Выделяем параметры раздела
   ptable[npart].hdoffset=ftell(in);  // позиция начала заголовка раздела
-  fread(buf,1,96,in); // заголовок
-  ptable[npart].hdsize=*((unsigned int*)&buf[0])-4;  // размер заголовка
+  fseek(in,-4,SEEK_CUR); // встаем на начало заголовка
+  fread(&header,1,sizeof(header),in); // читаем заголовок
+  
+  ptable[npart].hdsize=header.hdsize-4;  // размер заголовка
   ptable[npart].offset=ptable[npart].hdoffset+ptable[npart].hdsize; // смещение до тела раздела 
-  ptable[npart].size=*((unsigned int*)&buf[20]); // размер раздела
-  ptable[npart].code=*((unsigned int*)&buf[16]); // тип раздела
+  ptable[npart].size=header.psize; // размер раздела
+  ptable[npart].code=header.code; // тип раздела
     
   // Ищем символическое имя раздела по таблице 
   find_pname(ptable[npart].code,ptable[npart].pname);
+  // Выводим информацию о версии проивки
+  if (npart == 0) {
+    printf("\n Версия прошивки: %s",header.version);
+    printf("\n Дата сборки:     %s %s",header.date,header.time);
+    printf("\n Заголовок: версия %i  платформа %8.8s",header.hdversion,header.unlock);
+  }  
   // увеличиваем счетчик разделов 
-  npart++; 
+  npart++;
+  // пропускаем тело раздела
+  fseek(in,(header.psize+header.hdsize-sizeof(header)-4)&0xfffffffc,SEEK_CUR);
   }
 return npart;
 }
