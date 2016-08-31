@@ -90,13 +90,14 @@ while (fread(&i,1,4,in) == 4) {
   if (i == dpattern) break;
 }
 if (feof(in)) {
-  printf("\n В файле не найдены разделы - файл не содержит образа прошивки");
+  printf("\n В файле не найдены разделы - файл не содержит образа прошивки\n");
   exit(0);
 }  
 
+// поиск остальных разделов
 while (fread(&i,1,4,in) == 4) {
   if (i != dpattern) {
-    fseek(in,-3,SEEK_CUR);
+    fseek(in,-2,SEEK_CUR);
     continue; // ищем разделитель
   }  
   // Выделяем параметры раздела
@@ -115,13 +116,12 @@ while (fread(&i,1,4,in) == 4) {
   if (npart == 0) {
     printf("\n Версия прошивки: %s",header.version);
     printf("\n Дата сборки:     %s %s",header.date,header.time);
-    printf("\n Заголовок: версия %i  платформа %8.8s",header.hdversion,header.unlock);
+    printf("\n Заголовок: версия %i,  платформа %8.8s",header.hdversion,header.unlock);
   }  
   // увеличиваем счетчик разделов 
   npart++;
   // пропускаем тело раздела
   fseek(in,(header.psize+header.hdsize-sizeof(header)),SEEK_CUR);
-//   fseek(in,(header.psize+header.hdsize-sizeof(header))&0xfffffffc,SEEK_CUR);
   }
 return npart;
 }
