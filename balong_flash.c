@@ -174,8 +174,10 @@ FILE* out;
 
 struct ptb_t ptable[100];
 
-unsigned char buf[40960];
+unsigned char* buf;
 unsigned char devname[50]="/dev/ttyUSB0";
+
+
 
 
 unsigned int err;
@@ -351,18 +353,19 @@ if (eflag|sflag) {
    
    if(sflag) {
      // запись заголовка
-     fwrite(&dpattern,1,4,out); // маркер- magic заголовка блока
+     buf=malloc(ptable[i].hdsize);
      fseek(in,ptable[i].hdoffset,SEEK_SET); // встаем на начало заголовка
-     fread(buf,1,ptable[i].offset-ptable[i].hdoffset,in);
-     fwrite(buf,1,ptable[i].offset-ptable[i].hdoffset,out);
+     fread(buf,1,ptable[i].hdsize,in);
+     fwrite(buf,1,ptable[i].hdsize,out);
+     free(buf);
    }
    // запись тела
    fseek(in,ptable[i].offset,SEEK_SET); // встаем на начало
-   for(j=0;j<ptable[i].size;j+=4) {
-     fread(buf,4,1,in);
-     fwrite(buf,4,1,out);
-   }
+   buf=malloc(ptable[i].size);
+   fread(buf,ptable[i].size,1,in);
+   fwrite(buf,ptable[i].size,1,out);
    fclose(out);
+   free(buf);
  }
 printf("\n");
 return;

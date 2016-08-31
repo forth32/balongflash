@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "ptable.h"
 //******************************************************
 //*  поиск символического имени раздела по его коду
@@ -84,15 +85,26 @@ struct {
 const unsigned int dpattern=0xa55aaa55;
 unsigned int i,npart=0;
 
+// поиск начала цепочки разделов в файле
 while (fread(&i,1,4,in) == 4) {
-  if (i != dpattern) continue; // ищем разделитель
-    
+  if (i == dpattern) break;
+}
+if (feof(in)) {
+  printf("\n В файле не найдены разделы - файл не содержит образа прошивки");
+  exit(0);
+}  
+
+while (fread(&i,1,4,in) == 4) {
+  if (i != dpattern) {
+    fseek(in,-3,SEEK_CUR);
+    continue; // ищем разделитель
+  }  
   // Выделяем параметры раздела
-  ptable[npart].hdoffset=ftell(in);  // позиция начала заголовка раздела
   fseek(in,-4,SEEK_CUR); // встаем на начало заголовка
+  ptable[npart].hdoffset=ftell(in);  // позиция начала заголовка раздела
   fread(&header,1,sizeof(header),in); // читаем заголовок
   
-  ptable[npart].hdsize=header.hdsize-4;  // размер заголовка
+  ptable[npart].hdsize=header.hdsize;  // размер заголовка
   ptable[npart].offset=ptable[npart].hdoffset+ptable[npart].hdsize; // смещение до тела раздела 
   ptable[npart].size=header.psize; // размер раздела
   ptable[npart].code=header.code; // тип раздела
@@ -108,7 +120,8 @@ while (fread(&i,1,4,in) == 4) {
   // увеличиваем счетчик разделов 
   npart++;
   // пропускаем тело раздела
-  fseek(in,(header.psize+header.hdsize-sizeof(header)-4)&0xfffffffc,SEEK_CUR);
+  fseek(in,(header.psize+header.hdsize-sizeof(header)),SEEK_CUR);
+//   fseek(in,(header.psize+header.hdsize-sizeof(header))&0xfffffffc,SEEK_CUR);
   }
 return npart;
 }
