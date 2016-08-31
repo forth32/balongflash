@@ -94,6 +94,7 @@ if (feof(in)) {
   exit(0);
 }  
 
+fseek(in,-4,SEEK_CUR); // отъезжаем на начало маркера
 // поиск остальных разделов
 while (fread(&i,1,4,in) == 4) {
   if (i != dpattern) {
