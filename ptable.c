@@ -98,7 +98,7 @@ fseek(in,-4,SEEK_CUR); // отъезжаем на начало маркера
 // поиск остальных разделов
 while (fread(&i,1,4,in) == 4) {
   if (i != dpattern) {
-    fseek(in,-2,SEEK_CUR);
+    fseek(in,-3,SEEK_CUR);
     continue; // ищем разделитель
   }  
   // Выделяем параметры раздела
@@ -122,7 +122,7 @@ while (fread(&i,1,4,in) == 4) {
   // увеличиваем счетчик разделов 
   npart++;
   // пропускаем тело раздела
-  fseek(in,(header.psize+header.hdsize-sizeof(header)),SEEK_CUR);
+  fseek(in,header.psize+header.hdsize-sizeof(header)-16,SEEK_CUR);
   }
 return npart;
 }
