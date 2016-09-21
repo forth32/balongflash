@@ -398,8 +398,8 @@ if (gflag) {
  printf("\n Отправлем signver...");
  res=atcmd(signver,replybuf);
  if (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) {
-   printf("\n Ошибка проверки цифровой сигнатуры\n");
-   return;
+   printf("\n ! Ошибка проверки цифровой сигнатуры\n");
+//    return;
 }
 }
 
