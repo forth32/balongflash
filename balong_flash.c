@@ -199,6 +199,8 @@ unsigned char cmd_reset[7]={0xa};           // команда выхода из 
 unsigned char cmd_dload_init[15]={0x41};  // команда начала раздела
 unsigned char cmd_data_packet[11000]={0x42};  // команда начала пакета
 unsigned char cmd_dload_end[30]={0x43};       // команда конца раздела
+
+unsigned char cmd_getproduct[30]={0x45};
 // Коды типов разделов
 //-d       - попытка переключить модем из режима HDLC в АТ-режим\n\       
 
@@ -433,8 +435,12 @@ i=replybuf[2];
 replybuf[3+i]=0;
 printf("ok");
 printf("\n Версия протокола: %s",replybuf+3);
-printf("\n");
 
+
+iolen=send_cmd(cmd_getproduct,1,replybuf);
+printf("\n Идентификатор устройства: %s",replybuf+2); 
+
+printf("\n----------------------------------------------------\n");
 
 if ((optind>=argc)&rflag) goto reset; // перезагрузка без указания файла
 
