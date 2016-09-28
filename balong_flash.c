@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
+#ifndef WIN32
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -9,6 +10,11 @@
 #include <termios.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#else
+#include <windows.h>
+#include "getopt.h"
+#include "printf.h"
+#endif
 
 #include "hdlcio.h"
 #include "ptable.h"
@@ -175,10 +181,11 @@ FILE* out;
 struct ptb_t ptable[100];
 
 unsigned char* buf;
+#ifndef WIN32
 unsigned char devname[50]="/dev/ttyUSB0";
-
-
-
+#else
+char devname[50] = "";
+#endif
 
 unsigned int err;
 
@@ -210,9 +217,13 @@ while ((opt = getopt(argc, argv, "hp:mersng:k")) != -1) {
      
 printf("\n Утилита предназначена для прошивки модемов E3372S\n\n\
 %s [ключи] <имя файла для загрузки или имя каталога с файлами>\n\n\
- Допустимы следующие ключи:\n\n\
--p <tty> - последовательный порт для общения с загрузчиком (по умолчанию /dev/ttyUSB0)\n\
--n       - режим мультифайловой прошивки из указанного каталога\n\
+ Допустимы следующие ключи:\n\n"
+#ifndef WIN32
+"-p <tty> - последовательный порт для общения с загрузчиком (по умолчанию /dev/ttyUSB0)\n"
+#else
+"-p <tty> - последовательный порт для общения с загрузчиком\n"
+#endif
+"-n       - режим мультифайловой прошивки из указанного каталога\n\
 -g#      - установка режима цифровой подписи (-gl - описание параметров)\n\
 -m       - вывести карту файла прошивки и завершить работу\n\
 -e       - разобрать файл прошивки на разделы без заголовков\n\
@@ -296,7 +307,7 @@ if (nflag)
   strncpy(fdir,argv[optind],39);
 else {
   // для однофайловых операций
-in=fopen(argv[optind],"r");
+in=fopen(argv[optind],"rb");
 if (in == 0) {
   printf("\n Ошибка открытия %s",argv[optind]);
   return;
@@ -351,7 +362,7 @@ if (eflag|sflag) {
    printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].size,ptable[i].pname); 
    // формируем имя файла
    sprintf(filename,"%02i-%08x-%s.%s",i,ptable[i].code,ptable[i].pname,(eflag?"bin":"fw"));
-   out=fopen(filename,"w");
+   out=fopen(filename,"wb");
    
    if(sflag) {
      // запись заголовка
@@ -380,13 +391,34 @@ sio:
 
 // Настройка SIO
 
+#ifndef WIN32
+
 if (!open_port(devname))  {
    printf("\n - Последовательный порт %s не открывается\n", devname); 
    return; 
 }
 
-
 tcflush(siofd,TCIOFLUSH);  // очистка выходного буфера
+
+#else
+
+if (*devname == '\0')
+{
+    printf("\n - Последовательный порт не задан\n"); 
+    return; 
+}
+
+res = open_port(devname);
+if (res == 0)  {
+   printf("\n - Последовательный порт COM%s не открывается\n", devname); 
+   return; 
+}
+else if (res == -1)  {
+   printf("\n - Ошибка при инициализации COM-порта\n"); 
+   return; 
+}
+
+#endif
 
 res=dloadversion();
 if (res == -1) return;
@@ -408,7 +440,12 @@ if (gflag) {
 // Входим в HDLC-режим
 printf("\n Входим в режим HDLC...");
 
+#ifndef WIN32
 usleep(100000);
+#else
+Sleep(100);
+#endif
+
 res=atcmd("^DATAMODE",replybuf);
 if (res != 6) {
   printf("\n Неправильная длина ответа на ^DATAMODE");
@@ -467,11 +504,13 @@ for(part=0;part<npart;part++) {
     fseek(in,ptable[part].offset,SEEK_SET);
   else 
   // открываем файл в многофайловом режиме  
-    in=fopen(ptable[part].filename,"r");
+    in=fopen(ptable[part].filename,"rb");
 
   // Поблочный цикл
   for(blk=0;blk<((ptable[part].size+4095)/4096);blk++) {
     printf("\r Блок %i из %i",blk,(ptable[part].size+4095)/4096); fflush(stdout);
+if (nflag)
+  ptable[part].offset = 0;
     res=ptable[part].size+ptable[part].offset-ftell(in);  // размер оставшегося куска до конца файла
     if (res<4096) blksize=res;  // корректируем размер последнего блока
     *(unsigned int*)&cmd_data_packet[1]=htonl(blk+1);  // # пакета

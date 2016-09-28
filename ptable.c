@@ -1,10 +1,17 @@
 // Процедуры работы с таблицей разделов
 
 #include <stdio.h>
-#include <string.h>
 #include <stdint.h>
+#ifndef WIN32
+#include <string.h>
 #include <stdlib.h>
+#else
+#include <windows.h>
+#include "printf.h"
+#endif
+
 #include "ptable.h"
+
 //******************************************************
 //*  поиск символического имени раздела по его коду
 //******************************************************

@@ -1,6 +1,7 @@
 //  Низкоуровневые процедуры работы с последовательным портом и HDLC
 
 #include <stdio.h>
+#ifndef WIN32
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -10,6 +11,12 @@
 #include <termios.h>
 #include <unistd.h>
 #include <dirent.h>
+#else
+#include <windows.h>
+#include <io.h>
+#include "printf.h"
+#endif
+
 #include "hdlcio.h"
 
 unsigned int nand_cmd=0x1b400000;
@@ -23,8 +30,13 @@ unsigned int oobsize=0;
 
 static char pdev[500]; // имя последовательного порта
 
-struct termios sioparm;
 int siofd; // fd для работы с Последовательным портом
+#ifndef WIN32
+struct termios sioparm;
+//int siofd; // fd для работы с Последовательным портом
+#else
+static HANDLE hSerial;
+#endif
 
 
 //***********************
@@ -54,6 +66,31 @@ for (i=0;i<len;i+=16) {
 }
 }
 
+#ifdef WIN32
+
+int read(int siofd, void* buf, unsigned int len)
+{
+    DWORD bytes_read = 0;
+    //DWORD t = GetTickCount();
+
+    ReadFile(hSerial, buf, len, &bytes_read, NULL);
+    /*do {
+        ReadFile(hSerial, buf, len, &bytes_read, NULL);
+    } while (bytes_read == 0 && (GetTickCount() - t < 1000));*/
+
+    return bytes_read;
+}
+
+int write(int siofd, void* buf, unsigned int len)
+{
+    DWORD bytes_written = 0;
+
+    WriteFile(hSerial, buf, len, &bytes_written, NULL);
+
+    return bytes_written;
+}
+
+#endif
 
 //*************************************************
 //*  Вычисление CRC-16 
@@ -108,11 +145,21 @@ return (~crc)&0xffff;
 unsigned int send_unframed_buf(char* outcmdbuf, unsigned int outlen) {
 
 
+#ifndef WIN32
 tcflush(siofd,TCIOFLUSH);  // сбрасываем недочитанный буфер ввода
+#else
+PurgeComm(hSerial, PURGE_RXCLEAR);
+#endif
+
 write(siofd,"\x7e",1);  // отсылаем префикс
 
 if (write(siofd,outcmdbuf,outlen) == 0) {   printf("\n Ошибка записи команды");return 0;  }
+#ifndef WIN32
 tcdrain(siofd);  // ждем окончания вывода блока
+#else
+FlushFileBuffers(hSerial);
+#endif
+
 return 1;
 }
 
@@ -221,8 +268,6 @@ outcmdbuf[iolen]=0;
 return iolen;
 }
 
-
-
 //***************************************************
 //*  Отсылка команды в порт и получение результата  *
 //***************************************************
@@ -241,6 +286,8 @@ return receive_reply(iobuf,0);
 //***************************************************
 
 int open_port(char* devname) {
+
+#ifndef WIN32
 
 int i,dflag=1;
 char devstr[200]={0};
@@ -278,6 +325,51 @@ sioparm.c_lflag = 0;
 sioparm.c_cc[VTIME]=30; // timeout  
 sioparm.c_cc[VMIN]=0;  
 tcsetattr(siofd, TCSANOW, &sioparm);
+
+#else
+
+char device[20] = "\\\\.\\COM";
+DCB dcbSerialParams = {0};
+COMMTIMEOUTS CommTimeouts;
+
+strcat(device, devname);
+
+hSerial = CreateFileA(device, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+if (hSerial == INVALID_HANDLE_VALUE)
+{
+    return 0;
+}
+
+ZeroMemory(&dcbSerialParams, sizeof(dcbSerialParams));
+dcbSerialParams.DCBlength=sizeof(dcbSerialParams);
+dcbSerialParams.BaudRate = CBR_115200;
+dcbSerialParams.ByteSize = 8;
+dcbSerialParams.StopBits = ONESTOPBIT;
+dcbSerialParams.Parity = NOPARITY;
+dcbSerialParams.fBinary = TRUE;
+dcbSerialParams.fDtrControl = DTR_CONTROL_ENABLE;
+dcbSerialParams.fRtsControl = RTS_CONTROL_ENABLE;
+if (!SetCommState(hSerial, &dcbSerialParams))
+{
+    CloseHandle(hSerial);
+    return -1;
+}
+
+CommTimeouts.ReadIntervalTimeout = 5;
+CommTimeouts.ReadTotalTimeoutConstant = 7000;
+CommTimeouts.ReadTotalTimeoutMultiplier = 0;
+CommTimeouts.WriteTotalTimeoutConstant = 0;
+CommTimeouts.WriteTotalTimeoutMultiplier = 0;
+if (!SetCommTimeouts(hSerial, &CommTimeouts))
+{
+    CloseHandle(hSerial);
+    return -1;
+}
+
+PurgeComm(hSerial, PURGE_RXCLEAR);
+
+#endif
+
 return 1;
 }
 
@@ -287,7 +379,7 @@ return 1;
 //*************************************
 
 void port_timeout(int timeout) {
-
+#ifndef WIN32
 bzero(&sioparm, sizeof(sioparm)); // готовим блок атрибутов termios
 sioparm.c_cflag = B115200 | CS8 | CLOCAL | CREAD ;
 sioparm.c_iflag = 0;  // INPCK;
@@ -296,6 +388,7 @@ sioparm.c_lflag = 0;
 sioparm.c_cc[VTIME]=timeout; // timeout  
 sioparm.c_cc[VMIN]=0;  
 tcsetattr(siofd, TCSANOW, &sioparm);
+#endif
 }
 
 //*************************************************
@@ -310,6 +403,7 @@ tcsetattr(siofd, TCSANOW, &sioparm);
 //*************************************************
 int find_file(int num, char* dirname, char* filename,unsigned int* id, unsigned int* size) {
 
+#ifndef WIN32
 DIR* fdir;
 FILE* in;
 unsigned int pt;
@@ -377,6 +471,64 @@ fseek(in,0,SEEK_END);
 *size=ftell(in);
 fclose(in);
 
+#else
+
+char fpattern[80];
+char fname[_MAX_PATH];
+struct _finddata_t fileinfo;
+intptr_t res;
+FILE* in;
+unsigned int pt;
+
+sprintf(fpattern,"%s\\%02d*", dirname, num);
+res = _findfirst(fpattern, &fileinfo);
+_findclose(res);
+if (res == -1)
+    return 0;
+if ((fileinfo.attrib & _A_SUBDIR) != 0)
+    return 0;
+strcpy(fname, fileinfo.name);
+strcpy(filename, dirname);
+strcat(filename, "\\");
+strcat(filename, fname);  
+
+// 00-00000200-M3Boot.bin
+//проверяем имя файла на наличие знаков '-'
+if (fname[2] != '-' || fname[11] != '-') {
+  printf("\n Неправильный формат имени файла - %s\n",fname);
+  exit(1);
+}
+
+// проверяем цифровое поле ID раздела
+if (strspn(fname+3,"0123456789AaBbCcDdEeFf") != 8) {
+  printf("\n Ошибка в идентификаторе раздела - нецифровой знак - %s\n",filename);
+  exit(1);
+}  
+sscanf(fname+3,"%8x",id);
+
+// Проверяем доступность и читаемость файла
+in=fopen(filename,"rb");
+if (in == 0) {
+  printf("\n Ошибка открытия файла %s\n",filename);
+  exit(1);
+}
+if (fread(&pt,1,4,in) != 4) {
+  printf("\n Ошибка чтения файла %s\n",filename);
+  exit(1);
+}
+  
+// проверяем, что файл - сырой образ, без заголовка
+if (pt == 0xa55aaa55) {
+  printf("\n Файл %s имеет заголовок - для прошивки не подходит\n",filename);
+  exit(1);
+}
+
+fclose(in);
+
+*size = fileinfo.size;
+
+#endif
+
 return 1;
 }
 
@@ -399,11 +551,19 @@ strcat(cbuf,"\r");
 
 port_timeout(100);
 // Вычищаем буфер приемника и передатчика
+#ifndef WIN32
 tcflush(siofd,TCIOFLUSH);
+#else
+PurgeComm(hSerial, PURGE_RXCLEAR);
+#endif
 
 // отправка команды
 write(siofd,cbuf,strlen(cbuf));
+#ifndef WIN32
 usleep(100000);
+#else
+Sleep(100);
+#endif
 
 // чтение результата
 res=read(siofd,rbuf,200);
