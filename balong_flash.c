@@ -553,7 +553,7 @@ port_timeout(1);
 reset:
 
 if (rflag || !kflag) {
-  printf("\n Перезарузка модема...\n");
+  printf("\n Перезагрузка модема...\n");
   send_cmd(cmd_reset,1,replybuf);
   atcmd("^RESET",replybuf);
 }
