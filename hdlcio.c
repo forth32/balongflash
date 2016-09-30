@@ -441,7 +441,7 @@ if ((dentry->d_name[2] != '-') || (dentry->d_name[11] != '-')) {
 
 // проверяем цифровое поле ID раздела
 if (strspn(dentry->d_name+3,"0123456789AaBbCcDdEeFf") != 8) {
-  printf("\n Ошибка в идентификаторе раздела - нецифрвой знак - %s\n",filename);
+  printf("\n Ошибка в идентификаторе раздела - нецифровой знак - %s\n",filename);
   exit(1);
 }  
 sscanf(dentry->d_name+3,"%8x",id);
