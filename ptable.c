@@ -57,6 +57,14 @@ struct {
   {"Online",0x1b0000},
   {"Online",0x5d0000},
   {"Online",0x5e0000},
+  {"Ptable_R1",0x100},
+  {"Bootloader_R1",0x101},
+  {"Bootrom_R1",0x102},
+  {"VxWorks_R1",0x550103},
+  {"Fastboot_R1",0104},
+  {"Kernel_R1",0x105},
+  {"System_r1",0x107},
+  {"Nvimage_r1",0x66},
   {0,0}
 };
 
