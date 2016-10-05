@@ -536,7 +536,7 @@ if (nflag)
    // Закрытие потока 
    *((unsigned int*)&cmd_dload_end[1])=htonl(ptable[part].size);     
    *((unsigned int*)&cmd_dload_end[8])=htonl(ptable[part].code);
-   iolen=send_cmd(cmd_dload_end,24,replybuf); // отсылаем команду
+   iolen=send_cmd(cmd_dload_end,23,replybuf); // отсылаем команду
   if ((iolen == 0) || (replybuf[1] != 2)) {
     printf("\n ! Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
 //     dump(replybuf,iolen,0);
