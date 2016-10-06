@@ -435,7 +435,7 @@ if (res == 0) {
 
 // Если надо, отправляем команду цифровой подписи
 if (gflag) {
- printf("\n Отправлем signver...");
+ printf("\n Отправляем signver...");
  res=atcmd(signver,replybuf);
  if (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) {
    printf("\n ! Ошибка проверки цифровой сигнатуры\n");
@@ -469,15 +469,16 @@ if (memcmp(replybuf,OKrsp,6) != 0) {
 hdlc:
 
 iolen=send_cmd(cmdver,1,replybuf);
-if ((iolen == 0)||(replybuf[1] != 0x0d)) {
+if (replybuf[0] == 0x7e) memcpy(replybuf,replybuf+1,iolen-1);
+if ((iolen == 0)||(replybuf[0] != 0x0d)) {
   printf("\n Ошибка получения версии протокола\n");
   return;
 }  
   
-i=replybuf[2];
-replybuf[3+i]=0;
+i=replybuf[1];
+replybuf[2+i]=0;
 printf("ok");
-printf("\n Версия протокола: %s",replybuf+3);
+printf("\n Версия протокола: %s",replybuf+2);
 
 
 iolen=send_cmd(cmd_getproduct,1,replybuf);

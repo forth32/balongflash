@@ -63,8 +63,9 @@ struct {
   {"VxWorks_R1",0x550103},
   {"Fastboot_R1",0104},
   {"Kernel_R1",0x105},
-  {"System_r1",0x107},
-  {"Nvimage_r1",0x66},
+  {"System_R1",0x107},
+  {"Nvimage_R1",0x66},
+  {"WEBUI_R1",0x113},
   {0,0}
 };
 
