@@ -270,7 +270,7 @@ printf("\n Утилита предназначена для прошивки м�
      return;
   }
 }  
-printf("\n Программа для прошивки устройств на Balong-чипсете, V2.6 Build %i, (c) forth32, 2015, GNU GPLv3",BUILDNO);
+printf("\n Программа для прошивки устройств на Balong-чипсете, V2.6.%i, (c) forth32, 2015, GNU GPLv3",BUILDNO);
 #ifdef WIN32
 printf("\n Порт для Windows 32bit  (c) rust3028, 2016");
 #endif
@@ -468,8 +468,12 @@ if (memcmp(replybuf,OKrsp,6) != 0) {
 hdlc:
 
 iolen=send_cmd(cmdver,1,replybuf);
+if (iolen == 0) {
+  printf("\n Нет ответа от модема в HDLC-режиме\n");
+  return;
+}  
 if (replybuf[0] == 0x7e) memcpy(replybuf,replybuf+1,iolen-1);
-if ((iolen == 0)||(replybuf[0] != 0x0d)) {
+if (replybuf[0] != 0x0d) {
   printf("\n Ошибка получения версии протокола\n");
   return;
 }  
@@ -481,7 +485,7 @@ printf("\n Версия протокола: %s",replybuf+2);
 
 
 iolen=send_cmd(cmd_getproduct,1,replybuf);
-printf("\n Идентификатор устройства: %s",replybuf+2); 
+if (iolen>2) printf("\n Идентификатор устройства: %s",replybuf+2); 
 
 printf("\n----------------------------------------------------\n");
 
@@ -497,7 +501,11 @@ for(part=0;part<npart;part++) {
   *((unsigned int*)&cmd_dload_init[5])=htonl(ptable[part].size);  
   // отсылаем команду
   iolen=send_cmd(cmd_dload_init,12,replybuf);
-  if ((iolen == 0) || (replybuf[1] != 2)) {
+  if (iolen == 0) {
+    printf("\n Нет ответа на команду открытия раздела\n");
+    return;
+  }  
+  if (replybuf[1] != 2) {
     printf("\n Заголовок раздела не принят, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
 //    dump(cmd_dload_init,13,0);
     return;
@@ -523,9 +531,12 @@ if (nflag)
     *(unsigned short*)&cmd_data_packet[5]=htons(blksize);  // размер блока
     fread(cmd_data_packet+7,1,blksize,in); // читаем очередной кусок раздела в буфер команды
     iolen=send_cmd(cmd_data_packet,blksize+7,replybuf); // отсылаем команду
-    if ((iolen == 0) || (replybuf[1] != 2)) {
+    if (iolen == 0) {
+     printf("\n Нет ответа на команду записи блока # %i\n",blk);
+     return;
+    }  
+    if (replybuf[1] != 2) {
       printf("\n Блок %i раздела не принят, код ошибки = %02x %02x %02x\n",blk,replybuf[1],replybuf[2],replybuf[3]);
-//      (cmd_data_packet,blksize+7,0);
       return;
     }  
    }
@@ -537,10 +548,13 @@ if (nflag)
    *((unsigned int*)&cmd_dload_end[1])=htonl(ptable[part].size);     
    *((unsigned int*)&cmd_dload_end[8])=htonl(ptable[part].code);
    iolen=send_cmd(cmd_dload_end,23,replybuf); // отсылаем команду
-  if ((iolen == 0) || (replybuf[1] != 2)) {
+  if (iolen == 0) {
+    printf("\n ! Нет ответа от модема при закрытия раздела\n");
+    return;
+  }  
+  if (replybuf[1] != 2) {
     printf("\n ! Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
-//     dump(replybuf,iolen,0);
-//     return;
+    return;
   }  
    
 }   
