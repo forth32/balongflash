@@ -1,7 +1,8 @@
 CC       = gcc
 LIBS     = 
-CFLAGS   = -O2  -Wno-unused-result
-
+#BUILDNO = `cat build`
+BUILDNO=$(shell cat build)
+CFLAGS   = -O2  -Wno-unused-result -D BUILDNO=$(BUILDNO)
 .PHONY: all clean
 
 all:    balong_flash
@@ -10,14 +11,8 @@ clean:
 	rm *.o
 	rm balong_flash
 
-#.c.o:
-#	$(CC) -o $@ $(LIBS) $^ qcio.o
-
-hdlcio.o: hdlcio.c
-	$(CC) -c hdlcio.c
-
-ptable.o: ptable.c
-	$(CC) -c ptable.c
-
 balong_flash: balong_flash.o hdlcio.o ptable.o
-	@gcc $^ -o $@ $(LIBS)
+	@gcc $^ -o $@ $(LIBS) 
+	@echo Current buid: $(BUILDNO)
+	@echo $$((`cat build`+1)) >build
+	

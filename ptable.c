@@ -66,6 +66,7 @@ struct {
   {"System_R1",0x107},
   {"Nvimage_R1",0x66},
   {"WEBUI_R1",0x113},
+  {"APP_R1",0x109},
   {0,0}
 };
 
