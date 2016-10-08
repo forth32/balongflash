@@ -14,6 +14,7 @@
 #include <windows.h>
 #include "getopt.h"
 #include "printf.h"
+#include "buildno.h"
 #endif
 
 #include "hdlcio.h"
