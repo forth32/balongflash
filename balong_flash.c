@@ -550,7 +550,7 @@ if (nflag)
    *((unsigned int*)&cmd_dload_end[8])=htonl(ptable[part].code);
    iolen=send_cmd(cmd_dload_end,23,replybuf); // отсылаем команду
   if (iolen == 0) {
-    printf("\n ! Нет ответа от модема при закрытия раздела\n");
+    printf("\n ! Нет ответа от модема при закрытии раздела\n");
     return;
   }  
   if (replybuf[1] != 2) {
