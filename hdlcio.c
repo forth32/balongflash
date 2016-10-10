@@ -356,7 +356,7 @@ if (!SetCommState(hSerial, &dcbSerialParams))
 }
 
 CommTimeouts.ReadIntervalTimeout = 5;
-CommTimeouts.ReadTotalTimeoutConstant = 7000;
+CommTimeouts.ReadTotalTimeoutConstant = 30000;
 CommTimeouts.ReadTotalTimeoutMultiplier = 0;
 CommTimeouts.WriteTotalTimeoutConstant = 0;
 CommTimeouts.WriteTotalTimeoutMultiplier = 0;
