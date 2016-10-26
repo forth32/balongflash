@@ -98,6 +98,9 @@ struct {
  uint16_t crc;   // CRC заголовка
  uint16_t blocksize;
 } header; 
+// буфер префикса BIN-файла
+uint8_t prefix[0x5c];
+
 // Маркер начала заголовка раздела	      
 const unsigned int dpattern=0xa55aaa55;
 unsigned int i,npart=0;
@@ -111,7 +114,10 @@ if (feof(in)) {
   exit(0);
 }  
 
-fseek(in,-4,SEEK_CUR); // отъезжаем на начало маркера
+fseek(in,-0x60,SEEK_CUR); // отъезжаем на начало BIN-файла
+// вынимаем префикс
+fread(prefix,0x5c,1,in);
+printf("\n Код файла прошивки: %i (0x%x)",*((uint32_t*)&prefix[0]),*((uint32_t*)&prefix[0]));
 // поиск остальных разделов
 while (fread(&i,1,4,in) == 4) {
   if (i != dpattern) {
@@ -120,6 +126,9 @@ while (fread(&i,1,4,in) == 4) {
   }  
   // Выделяем параметры раздела
   fseek(in,-4,SEEK_CUR); // встаем на начало заголовка
+
+//   printf("\n p%i: %08x",npart,ftell(in));
+  
   ptable[npart].hdoffset=ftell(in);  // позиция начала заголовка раздела
   fread(&header,1,sizeof(header),in); // читаем заголовок
   
@@ -127,6 +136,7 @@ while (fread(&i,1,4,in) == 4) {
   ptable[npart].offset=ptable[npart].hdoffset+ptable[npart].hdsize; // смещение до тела раздела 
   ptable[npart].size=header.psize; // размер раздела
   ptable[npart].code=header.code; // тип раздела
+
     
   // Ищем символическое имя раздела по таблице 
   find_pname(ptable[npart].code,ptable[npart].pname);
