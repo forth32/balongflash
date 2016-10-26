@@ -61,7 +61,7 @@ struct {
   {"Bootloader_R1",0x101},
   {"Bootrom_R1",0x102},
   {"VxWorks_R1",0x550103},
-  {"Fastboot_R1",0104},
+  {"Fastboot_R1",0x104},
   {"Kernel_R1",0x105},
   {"System_R1",0x107},
   {"Nvimage_R1",0x66},
