@@ -114,10 +114,16 @@ if (feof(in)) {
   exit(0);
 }  
 
+if (ftell(in)<0x60) {
+    printf("\n Заголовок файла имеет неправильный размер\n");
+    exit(0);
+}    
 fseek(in,-0x60,SEEK_CUR); // отъезжаем на начало BIN-файла
+
 // вынимаем префикс
 fread(prefix,0x5c,1,in);
 printf("\n Код файла прошивки: %i (0x%x)",*((uint32_t*)&prefix[0]),*((uint32_t*)&prefix[0]));
+
 // поиск остальных разделов
 while (fread(&i,1,4,in) == 4) {
   if (i != dpattern) {
