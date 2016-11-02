@@ -34,10 +34,11 @@ struct {
   {2,1110,"Вебинтерфейс+ISO для HLINK-модема"},
   {6,1110,"Вебинтерфейс+ISO для HLINK-модема"},
   {2,846,"ISO (dashboard) для stick-модема"},
+  {7,3750,"Прошивка+ISO+вебинтерфейс"},
   {99,3750,"универсальная"},
 };
 
-#define signbaselen 6
+#define signbaselen 7
 
 struct {
   uint8_t code;
