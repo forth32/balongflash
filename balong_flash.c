@@ -187,26 +187,21 @@ return -1;
 
 void main(int argc, char* argv[]) {
 
-unsigned int i,j,opt,iolen,blk,blksize;
+unsigned int i,opt,iolen;
 int res;
 FILE* in;
 FILE* out;
 
-unsigned char* buf;
 #ifndef WIN32
 unsigned char devname[50]="/dev/ttyUSB0";
 #else
 char devname[50] = "";
 #endif
 
-unsigned int err;
-
 unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
-unsigned char NAKrsp[]={0x03, 0x00, 0x02, 0xba, 0x0a, 0x7e};
 // ответ на ^signver
 unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 
-unsigned int  dpattern=0xa55aaa55;
 unsigned int  mflag=0,eflag=0,rflag=0,sflag=0,nflag=0,kflag=0,fflag=0;
 unsigned char filename [100];
 

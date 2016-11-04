@@ -53,7 +53,7 @@ return 1;
 
 unsigned int receive_reply(char* iobuf, int masslen) {
   
-int i,iolen,escflag,bcnt,incount;
+int i,iolen,escflag,incount;
 unsigned char c;
 unsigned int res;
 unsigned char replybuf[14000];
@@ -117,7 +117,7 @@ return iolen;
 //***********************************************************
 unsigned int convert_cmdbuf(char* incmdbuf, int blen, char* outcmdbuf) {
 
-int i,iolen,escflag,bcnt,incount;
+int i,iolen,bcnt;
 unsigned char cmdbuf[14096];
 
 bcnt=blen;
