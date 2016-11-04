@@ -20,6 +20,7 @@
 extern struct ptb_t ptable[];
 extern int npart; // число разделов в таблице
 
+extern unsigned int errflag;
 
 //******************************************************
 //*  поиск символического имени раздела по его коду
@@ -179,17 +180,20 @@ ptable[npart].hd.crc=0;  // старая CRC в рассчете не учиты
 crc=crc16((uint8_t*)&ptable[npart].hd,sizeof(struct pheader));
 if (crc != hcrc) {
     printf("\n! Раздел %s (%02x) - ошибка контрольной суммы заголовка",ptable[npart].pname,ptable[npart].hd.code>>16);
+    errflag=1;
 }  
 ptable[npart].hd.crc=crc;  // восстанавливаем CRC
 
 // вычисляем и проверяем CRC раздела
 calc_crc16(npart);
 if (crcblocksize != crcsize(npart)) {
-    printf("\nРаздел %s (%02x) - неправильный размер блока контрольных сумм",ptable[npart].pname,ptable[npart].hd.code>>16);
+    printf("\n! Раздел %s (%02x) - неправильный размер блока контрольных сумм",ptable[npart].pname,ptable[npart].hd.code>>16);
+    errflag=1;
 }  
   
 else if (memcmp(crcblock,ptable[npart].csumblock,crcblocksize) != 0) {
-    printf("\nРаздел %s (%02x) - неправильная блочная контрольная сумма",ptable[npart].pname,ptable[npart].hd.code>>16);
+    printf("\n! Раздел %s (%02x) - неправильная блочная контрольная сумма",ptable[npart].pname,ptable[npart].hd.code>>16);
+    errflag=1;
 }  
   
 free(crcblock);
