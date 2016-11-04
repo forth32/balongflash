@@ -38,29 +38,6 @@ struct ptb_t ptable[120];
 int npart=0; // число разделов в таблице
 
 
-//****************************************************
-//* Определение версии прошивальщика
-//*
-//*   0 - нет ответа на команду
-//*   1 - версия 2.0
-//*  -1 - версия не 2.0 
-//****************************************************
-int dloadversion() {
-
-int res;  
-int i;  
-
-res=atcmd("^DLOADVER?",replybuf);
-if (res == 0) return 0;
-if (strncmp(replybuf+2,"2.0",3) == 0) return 1;
-for (i=2;i<res;i++) {
-  if (replybuf[i] == 0x0d) replybuf[i]=0;
-}  
-printf("! Неправильная версия монитора прошивки - [%i]%s\n",res,replybuf+2);
-dump(replybuf,res,0);
-return -1;
-}
-  
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 void main(int argc, char* argv[]) {
@@ -68,7 +45,6 @@ void main(int argc, char* argv[]) {
 unsigned int i,opt,iolen;
 int res;
 FILE* in;
-FILE* out;
 
 #ifndef WIN32
 unsigned char devname[50]="/dev/ttyUSB0";
@@ -81,7 +57,6 @@ unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 
 unsigned int  mflag=0,eflag=0,rflag=0,sflag=0,nflag=0,kflag=0,fflag=0;
-unsigned char filename [100];
 
 unsigned char fdir[40];   // каталог для мультифайловой прошивки
 
@@ -243,24 +218,9 @@ if (!fflag && errflag) {
 //------- Режим разрезания файла прошивки
 //--------------------------------------------
 if (eflag|sflag) {
- printf("\n Выделение разделов из файла прошивки:\n\n ## Смещение  Размер   Имя\n-------------------------------------");
- for (i=0;i<npart;i++) {  
-   printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].hd.psize,ptable[i].pname); 
-   // формируем имя файла
-   sprintf(filename,"%02i-%08x-%s.%s",i,ptable[i].hd.code,ptable[i].pname,(eflag?"bin":"fw"));
-   out=fopen(filename,"wb");
-   
-   if(sflag) {
-     // запись заголовка
-     fwrite(&ptable[i].hd,1,sizeof(struct pheader),out);   // фиксированный заголовок
-     fwrite(&ptable[i].csumblock,1,ptable[i].hd.hdsize-sizeof(struct pheader),out); // блок контрольных сумм
-   }
-   // запись тела
-   fwrite(ptable[i].pimage,ptable[i].hd.psize,1,out);
-   fclose(out);
- }
-printf("\n");
-return;
+  fwsplit(sflag);
+  printf("\n");
+  return;
 }
 
 
@@ -308,7 +268,6 @@ if (res == 0) {
 
 // Если надо, отправляем команду цифровой подписи
 if (gflag) {
-//  printf("\n Отправляем signver...");
  res=atcmd(signver,replybuf);
  if (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) {
    printf("\n ! Ошибка проверки цифровой сигнатуры\n");
@@ -317,23 +276,16 @@ if (gflag) {
 }
 
 // Входим в HDLC-режим
-// printf("\n Входим в режим HDLC...");
 
-#ifndef WIN32
 usleep(100000);
-#else
-Sleep(100);
-#endif
 
 res=atcmd("^DATAMODE",replybuf);
 if (res != 6) {
   printf("\n Неправильная длина ответа на ^DATAMODE");
-//   dump(replybuf,res,0);
   return;
 }  
 if (memcmp(replybuf,OKrsp,6) != 0) {
   printf("\n Команда ^DATAMODE отвергнута, возможно требуется режим цифровой подписи\n");
-//   dump(replybuf,res,0);
   return;
 }  
 
@@ -366,12 +318,12 @@ printf("\n----------------------------------------------------\n");
 if ((optind>=argc)&rflag) goto reset; // перезагрузка без указания файла
 
 // Записываем всю флешку
-// printf("\n=== Запись разделов в устройство ===\n");
 flash_all();
 printf("\n");
 
 
 port_timeout(1);
+
 // выходим из режима HDLC и перезагружаемся
 reset:
 

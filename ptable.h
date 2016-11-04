@@ -1,3 +1,5 @@
+
+
 // структура описания заголовка раздела
 struct __attribute__ ((__packed__)) pheader {
  uint32_t magic;    //   0xa55aaa55
@@ -24,6 +26,14 @@ struct ptb_t{
   uint32_t offset;   // смещение в файле до начала раздела
   uint32_t zflag;     // признак сжатого раздела  
 };
+
+//******************************************************
+//*  Внешние массивы для хранения таблицы разделов
+//******************************************************
+extern struct ptb_t ptable[];
+extern int npart; // число разделов в таблице
+
+extern uint32_t errflag;
 
 int findparts(FILE* in);
 void  find_pname(unsigned int id,unsigned char* pname);

@@ -6,3 +6,6 @@ int find_file(int num, char* dirname, char* filename,unsigned int* id, unsigned 
 void port_timeout(int timeout);
 int atcmd(char* cmd, char* rbuf);
 
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#endif
