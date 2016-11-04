@@ -1,14 +1,31 @@
+// структура описания заголовка раздела
+struct __attribute__ ((__packed__)) pheader {
+ uint32_t magic;    //   0xa55aaa55
+ uint32_t hdsize;   // размер заголовка
+ uint32_t hdversion;
+ uint8_t unlock[8];
+ uint32_t code;     // тип раздела
+ uint32_t psize;    // разме поля данных
+ uint8_t date[16];
+ uint8_t time[16];  // дата-время сборки прошивки
+ uint8_t version[32];   // версия пршоивки
+ uint16_t crc;   // CRC заголовка
+ uint32_t blocksize;  // размер блока CRC образа прошивки
+}; 
+
+
 // Структура описания таблицы разделов
 
 struct ptb_t{
-  unsigned int offset;    // позиция образа раздела
-  unsigned int hdoffset;  // позиция заголовка раздела
-  unsigned int size;      // размер образа раздела
-  unsigned int hdsize;    // размер заголовка раздела
-  unsigned int code;      // ID раздела
   unsigned char pname[20];    // буквенное имя раздела
-  unsigned char filename[50]; // имя файла, соответствующее разделу
+  struct pheader hd;  // образ заголовка
+  uint16_t* csumblock; // блок контрольных сумм
+  uint8_t* pimage;   // образ раздела
+  uint32_t offset;   // смещение в файле до начала раздела
+  
 };
 
-int findparts(FILE* in, struct ptb_t* ptable);
+int findparts(FILE* in);
 void  find_pname(unsigned int id,unsigned char* pname);
+void findfiles (char* fdir);
+uint32_t psize(int n);

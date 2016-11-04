@@ -11,7 +11,7 @@ clean:
 	rm *.o
 	rm balong_flash
 
-balong_flash: balong_flash.o hdlcio_linux.o ptable.o
+balong_flash: balong_flash.o hdlcio_linux.o ptable.o flasher.o util.o
 	@gcc $^ -o $@ $(LIBS) 
 	@echo Current buid: $(BUILDNO)
 	@echo $$((`cat build`+1)) >build

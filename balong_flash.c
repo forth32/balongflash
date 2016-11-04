@@ -19,8 +19,17 @@
 
 #include "hdlcio.h"
 #include "ptable.h"
+#include "flasher.h"
+#include "util.h"
 
 unsigned char replybuf[4096];
+
+//***********************************************
+//* Таблица разделов
+//***********************************************
+struct ptb_t ptable[120];
+int npart=0; // число разделов в таблице
+
 
 // Цифровые подписи
 
@@ -175,12 +184,10 @@ return -1;
 
 void main(int argc, char* argv[]) {
 
-unsigned int i,j,opt,npart=0,iolen,part,blk,blksize;
+unsigned int i,j,opt,iolen,blk,blksize;
 int res;
 FILE* in;
 FILE* out;
-
-struct ptb_t ptable[100];
 
 unsigned char* buf;
 #ifndef WIN32
@@ -205,9 +212,6 @@ unsigned char fdir[40];   // каталог для мультифайловой 
 unsigned char cmdver[7]={0x0c};           // версия протокола
 unsigned char cmddone[7]={0x1};           // команда выхода из HDLC
 unsigned char cmd_reset[7]={0xa};           // команда выхода из HDLC
-unsigned char cmd_dload_init[15]={0x41};  // команда начала раздела
-unsigned char cmd_data_packet[11000]={0x42};  // команда начала пакета
-unsigned char cmd_dload_end[30]={0x43};       // команда конца раздела
 
 unsigned char cmd_getproduct[30]={0x45};
 // Коды типов разделов
@@ -272,7 +276,7 @@ printf("\n Утилита предназначена для прошивки м�
      return;
   }
 }  
-printf("\n Программа для прошивки устройств на Balong-чипсете, V2.6.%i, (c) forth32, 2015, GNU GPLv3",BUILDNO);
+printf("\n Программа для прошивки устройств на Balong-чипсете, V3.0.%i, (c) forth32, 2015, GNU GPLv3",BUILDNO);
 #ifdef WIN32
 printf("\n Порт для Windows 32bit  (c) rust3028, 2016");
 #endif
@@ -323,30 +327,15 @@ if (in == 0) {
 
 
 // Поиск разделов внутри файла
-//--------------------------------------------
-
 if (!nflag) {
-//   printf("\n Разбираем файл прошивки...");
-  npart=findparts(in,ptable);
-  if (npart == 0) {
-    printf("\nРазделы не найдены!");
-    return ;
-  }  
+  findparts(in);
+  printf("\n Версия прошивки: %s",ptable[0].hd.version);
+  printf("\n Дата сборки:     %s %s",ptable[0].hd.date,ptable[0].hd.time);
+  printf("\n Заголовок: версия %i,  платформа %8.8s",ptable[0].hd.hdversion,ptable[0].hd.unlock);
 }  
 
 // Поиск файлов прошивок в указанном каталоге
-//--------------------------------------------
-else {
-  printf("\n Поиск файлов-образов разделов...\n\n ##   Размер      ID       Имя       Файл\n-----------------------------------------------------------------\n");
-  for (npart=0;npart<30;npart++) {
-    if (find_file(npart, fdir, ptable[npart].filename, &ptable[npart].code, &ptable[npart].size) == 0) break; // конец поиска - раздела с таким ID не нашли
-    // получаем символическое имя раздела
-    find_pname(ptable[npart].code,ptable[npart].pname);
-    printf("\n %02i  %8i  %08x  %-8.8s  %s",npart,ptable[npart].size,ptable[npart].code,ptable[npart].pname,ptable[npart].filename);
-  }
-}
-
-// printf("\n Найдено %i разделов",npart);
+else findfiles(fdir);
 
   
 //------ Режим вывода карты файла прошивки
@@ -355,7 +344,7 @@ else {
 if (mflag) {
  printf("\n\n ## Смещение  Размер   Имя\n-------------------------------------");
  for (i=0;i<npart;i++) 
-     printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].size,ptable[i].pname); 
+     printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].hd.psize,ptable[i].pname); 
  printf("\n");
  return;
 }
@@ -366,26 +355,19 @@ if (mflag) {
 if (eflag|sflag) {
  printf("\n Выделение разделов из файла прошивки:\n\n ## Смещение  Размер   Имя\n-------------------------------------");
  for (i=0;i<npart;i++) {  
-   printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].size,ptable[i].pname); 
+   printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].hd.psize,ptable[i].pname); 
    // формируем имя файла
-   sprintf(filename,"%02i-%08x-%s.%s",i,ptable[i].code,ptable[i].pname,(eflag?"bin":"fw"));
+   sprintf(filename,"%02i-%08x-%s.%s",i,ptable[i].hd.code,ptable[i].pname,(eflag?"bin":"fw"));
    out=fopen(filename,"wb");
    
    if(sflag) {
      // запись заголовка
-     buf=malloc(ptable[i].hdsize);
-     fseek(in,ptable[i].hdoffset,SEEK_SET); // встаем на начало заголовка
-     fread(buf,1,ptable[i].hdsize,in);
-     fwrite(buf,1,ptable[i].hdsize,out);
-     free(buf);
+     fwrite(&ptable[i].hd,1,sizeof(struct pheader),out);   // фиксированный заголовок
+     fwrite(&ptable[i].csumblock,1,ptable[i].hd.hdsize-sizeof(struct pheader),out); // блок контрольных сумм
    }
    // запись тела
-   fseek(in,ptable[i].offset,SEEK_SET); // встаем на начало
-   buf=malloc(ptable[i].size);
-   fread(buf,ptable[i].size,1,in);
-   fwrite(buf,ptable[i].size,1,out);
+   fwrite(ptable[i].pimage,ptable[i].hd.psize,1,out);
    fclose(out);
-   free(buf);
  }
 printf("\n");
 return;
@@ -436,7 +418,7 @@ if (res == 0) {
 
 // Если надо, отправляем команду цифровой подписи
 if (gflag) {
- printf("\n Отправляем signver...");
+//  printf("\n Отправляем signver...");
  res=atcmd(signver,replybuf);
  if (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) {
    printf("\n ! Ошибка проверки цифровой сигнатуры\n");
@@ -445,7 +427,7 @@ if (gflag) {
 }
 
 // Входим в HDLC-режим
-printf("\n Входим в режим HDLC...");
+// printf("\n Входим в режим HDLC...");
 
 #ifndef WIN32
 usleep(100000);
@@ -493,74 +475,9 @@ printf("\n----------------------------------------------------\n");
 
 if ((optind>=argc)&rflag) goto reset; // перезагрузка без указания файла
 
-
-// Главный цикл записи разделов
-for(part=0;part<npart;part++) {
-  printf("\r Записываем раздел %i - %s\n",part,ptable[part].pname);
-  
-  // заполняем командный пакет
-  *((unsigned int*)&cmd_dload_init[1])=htonl(ptable[part].code);  
-  *((unsigned int*)&cmd_dload_init[5])=htonl(ptable[part].size);  
-  // отсылаем команду
-  iolen=send_cmd(cmd_dload_init,12,replybuf);
-  if (iolen == 0) {
-    printf("\n Нет ответа на команду открытия раздела\n");
-    return;
-  }  
-  if (replybuf[1] != 2) {
-    printf("\n Заголовок раздела не принят, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
-//    dump(cmd_dload_init,13,0);
-    return;
-  }  
-
-  //  Подготовка к поблочному циклу
-  blksize=4096; // начальное значение размера блока
-  if (!nflag)   
-  // встаем на начало раздела в однофайловом режиме
-    fseek(in,ptable[part].offset,SEEK_SET);
-  else 
-  // открываем файл в многофайловом режиме  
-    in=fopen(ptable[part].filename,"rb");
-
-  // Поблочный цикл
-  for(blk=0;blk<((ptable[part].size+4095)/4096);blk++) {
-    printf("\r Блок %i из %i",blk,(ptable[part].size+4095)/4096); fflush(stdout);
-if (nflag)
-  ptable[part].offset = 0;
-    res=ptable[part].size+ptable[part].offset-ftell(in);  // размер оставшегося куска до конца файла
-    if (res<4096) blksize=res;  // корректируем размер последнего блока
-    *(unsigned int*)&cmd_data_packet[1]=htonl(blk+1);  // # пакета
-    *(unsigned short*)&cmd_data_packet[5]=htons(blksize);  // размер блока
-    fread(cmd_data_packet+7,1,blksize,in); // читаем очередной кусок раздела в буфер команды
-    iolen=send_cmd(cmd_data_packet,blksize+7,replybuf); // отсылаем команду
-    if (iolen == 0) {
-     printf("\n Нет ответа на команду записи блока # %i\n",blk);
-     return;
-    }  
-    if (replybuf[1] != 2) {
-      printf("\n Блок %i раздела не принят, код ошибки = %02x %02x %02x\n",blk,replybuf[1],replybuf[2],replybuf[3]);
-      return;
-    }  
-   }
-   
-   // Закрытие файла в многофайловом режиме
-   if (nflag) fclose(in);
-    
-   // Закрытие потока 
-   *((unsigned int*)&cmd_dload_end[1])=htonl(ptable[part].size);     
-   *((unsigned int*)&cmd_dload_end[8])=htonl(ptable[part].code);
-   iolen=send_cmd(cmd_dload_end,23,replybuf); // отсылаем команду
-  if (iolen == 0) {
-    printf("\n ! Нет ответа от модема при закрытии раздела\n");
-    return;
-  }  
-  if (replybuf[1] != 2) {
-    printf("\n ! Ошибка закрытия раздела, код ошибки = %02x %02x %02x\n",replybuf[1],replybuf[2],replybuf[3]);
-    return;
-  }  
-   
-}   
-// Конец главного цикла  
+// Записываем всю флешку
+// printf("\n=== Запись разделов в устройство ===\n");
+flash_all();
 printf("\n");
 
 
