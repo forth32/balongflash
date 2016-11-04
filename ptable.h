@@ -22,7 +22,7 @@ struct ptb_t{
   uint16_t* csumblock; // блок контрольных сумм
   uint8_t* pimage;   // образ раздела
   uint32_t offset;   // смещение в файле до начала раздела
-  
+  uint32_t zflag;     // признак сжатого раздела  
 };
 
 int findparts(FILE* in);

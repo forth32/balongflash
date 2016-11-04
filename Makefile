@@ -1,8 +1,8 @@
 CC       = gcc
-LIBS     = 
+LIBS     = -lz
 #BUILDNO = `cat build`
 BUILDNO=$(shell cat build)
-CFLAGS   = -O2  -Wno-unused-result -D BUILDNO=$(BUILDNO)
+CFLAGS   = -O2  -Wno-unused-result -D BUILDNO=$(BUILDNO) $(LIBS) 
 .PHONY: all clean
 
 all:    balong_flash

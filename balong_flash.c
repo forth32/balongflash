@@ -21,6 +21,7 @@
 #include "ptable.h"
 #include "flasher.h"
 #include "util.h"
+#include "zlib.h"
 
 unsigned char replybuf[4096];
 // флаг ошибки структуры файла
@@ -349,9 +350,13 @@ else findfiles(fdir);
 //--------------------------------------------
   
 if (mflag) {
- printf("\n\n ## Смещение  Размер   Имя\n-------------------------------------");
- for (i=0;i<npart;i++) 
-     printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].hd.psize,ptable[i].pname); 
+ printf("\n\n ## Смещение  Размер  Сжатие  Имя\n-------------------------------------");
+ for (i=0;i<npart;i++) { 
+     printf("\n %02i %08x %8i",i,ptable[i].offset,ptable[i].hd.psize);
+     if (ptable[i].zflag == 0) printf("        ");
+     else printf("  %3i%%   ",(ptable[i].hd.psize-ptable[i].zflag)*100/ptable[i].hd.psize);
+     printf("%s",ptable[i].pname); 
+ }   
  printf("\n");
  return;
 }

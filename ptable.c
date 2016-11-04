@@ -10,6 +10,8 @@
 #include "printf.h"
 #endif
 
+#include <zlib.h>
+
 #include "ptable.h"
 #include "hdlcio.h"
 #include "util.h"
@@ -157,7 +159,12 @@ void extract(FILE* in)  {
 uint16_t hcrc,crc;
 uint16_t* crcblock;
 uint32_t crcblocksize;
+uint8_t* zbuf;
+long unsigned int zlen;
+int res;
 
+
+ptable[npart].zflag=0; 
 // читаем заголовок в структуру
 ptable[npart].offset=ftell(in);
 fread(&ptable[npart].hd,1,sizeof(struct pheader),in); // заголовок
@@ -197,6 +204,31 @@ else if (memcmp(crcblock,ptable[npart].csumblock,crcblocksize) != 0) {
 }  
   
 free(crcblock);
+
+// Определение zlib-сжатия
+
+if ((*(uint16_t*)ptable[npart].pimage) == 0xda78) {
+  ptable[npart].zflag=ptable[npart].hd.psize;  // сохраняем сжатый размер 
+  zlen=52428800;
+  zbuf=malloc(zlen);  // буфер в 50М
+  // распаковываем образ раздела
+  res=uncompress (zbuf, &zlen, ptable[npart].pimage, ptable[npart].hd.psize);
+  if (res != Z_OK) {
+    printf("\n! Ошибка распаковки раздела %s (%02x)\n",ptable[npart].pname,ptable[npart].hd.code>>16);
+    exit(0);
+  }
+  // создаем новый буфер образа раздела и копируем в него рапаковынные данные
+  free(ptable[npart].pimage);
+  ptable[npart].pimage=malloc(zlen);
+  memcpy(ptable[npart].pimage,zbuf,zlen);
+  ptable[npart].hd.psize=zlen;
+  free(zbuf);
+  // перерассчитываем контрольные суммы
+  calc_crc16(npart);
+  ptable[npart].hd.crc=crc16((uint8_t*)&ptable[npart].hd,sizeof(struct pheader));
+}
+  
+
 // продвигаем счетчик разделов
 npart++;
 // отъезжаем немного назад
