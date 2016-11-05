@@ -173,7 +173,9 @@ int open_port(char* devname) {
 int i,dflag=1;
 char devstr[200]={0};
 
-strcpy(pdev,devname);   // сохраняем имя порта  
+
+if (strlen(devname) != 0) strcpy(pdev,devname);   // сохраняем имя порта  
+else strcpy(devname,"/dev/ttyUSB0");  // если имя порта не было задано
 
 // Вместо полного имени устройства разрешается передавать только номер ttyUSB-порта
 
@@ -189,8 +191,10 @@ if (dflag) strcpy(devstr,"/dev/ttyUSB");
 strcat(devstr,devname);
 
 siofd = open(devstr, O_RDWR | O_NOCTTY |O_SYNC);
-if (siofd == -1) return 0;
-
+if (siofd == -1) {
+  printf("\n! - Последовательный порт %s не открывается\n", devname); 
+  exit(0);
+}
 bzero(&sioparm, sizeof(sioparm)); // готовим блок атрибутов termios
 sioparm.c_cflag = B115200 | CS8 | CLOCAL | CREAD ;
 sioparm.c_iflag = 0;  // INPCK;
@@ -200,6 +204,7 @@ sioparm.c_cc[VTIME]=30; // timeout
 sioparm.c_cc[VMIN]=0;  
 tcsetattr(siofd, TCSANOW, &sioparm);
 
+tcflush(siofd,TCIOFLUSH);  // очистка выходного буфера
 
 return 1;
 }

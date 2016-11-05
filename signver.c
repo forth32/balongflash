@@ -61,8 +61,9 @@ struct {
 };  
 
 
-// результирующая строка ^signver - команды
-extern unsigned char signver[];
+// результирующая строка ^signver-команды
+uint8_t signver[200];
+
 // Флаг режима цифровой подписи
 extern int gflag;
 
@@ -152,3 +153,19 @@ perror:
  exit(0);
 } 
   
+
+//***************************************************
+//* Отправка цифровой подписи
+//***************************************************
+void send_signver() {
+  
+uint32_t res;
+// ответ на ^signver
+unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
+uint8_t replybuf[200];
+  
+res=atcmd(signver,replybuf);
+if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
+   printf("\n ! Ошибка проверки цифровой сигнатуры - %02x\n",replybuf[2]);
+}
+}

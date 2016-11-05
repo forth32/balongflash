@@ -165,6 +165,14 @@ int open_port(char* devname) {
 
 
 char device[20] = "\\\\.\\COM";
+
+if (*devname == '\0')
+{
+    printf("\n! - Последовательный порт не задан\n"); 
+    exit(0); 
+}
+
+
 DCB dcbSerialParams = {0};
 COMMTIMEOUTS CommTimeouts;
 
@@ -173,7 +181,8 @@ strcat(device, devname);
 hSerial = CreateFileA(device, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 if (hSerial == INVALID_HANDLE_VALUE)
 {
-    return 0;
+   printf("\n! - Последовательный порт COM%s не открывается\n", devname); 
+   exit(0); 
 }
 
 ZeroMemory(&dcbSerialParams, sizeof(dcbSerialParams));
@@ -188,6 +197,7 @@ dcbSerialParams.fRtsControl = RTS_CONTROL_ENABLE;
 if (!SetCommState(hSerial, &dcbSerialParams))
 {
     CloseHandle(hSerial);
+    printf("\n! - Ошибка при инициализации COM-порта\n"); 
     return -1;
 }
 
@@ -199,7 +209,7 @@ CommTimeouts.WriteTotalTimeoutMultiplier = 0;
 if (!SetCommTimeouts(hSerial, &CommTimeouts))
 {
     CloseHandle(hSerial);
-    return -1;
+    exit(0); 
 }
 
 PurgeComm(hSerial, PURGE_RXCLEAR);

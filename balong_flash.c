@@ -21,15 +21,14 @@
 #include "ptable.h"
 #include "flasher.h"
 #include "util.h"
+#include "signver.h"
 #include "zlib.h"
 
-unsigned char replybuf[4096];
 // флаг ошибки структуры файла
 unsigned int errflag=0;
-void gparm(char* sparm);
 
+// флаг цифровой подписи
 int gflag;
-uint8_t signver[200];
 
 //***********************************************
 //* Таблица разделов
@@ -42,32 +41,14 @@ int npart=0; // число разделов в таблице
 
 void main(int argc, char* argv[]) {
 
-unsigned int i,opt,iolen;
+unsigned int opt;
 int res;
 FILE* in;
-
-#ifndef WIN32
-unsigned char devname[50]="/dev/ttyUSB0";
-#else
 char devname[50] = "";
-#endif
-
-unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
-// ответ на ^signver
-unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
-
 unsigned int  mflag=0,eflag=0,rflag=0,sflag=0,nflag=0,kflag=0,fflag=0;
-
 unsigned char fdir[40];   // каталог для мультифайловой прошивки
 
-unsigned char cmdver[7]={0x0c};           // версия протокола
-unsigned char cmddone[7]={0x1};           // команда выхода из HDLC
-unsigned char cmd_reset[7]={0xa};           // команда выхода из HDLC
-
-unsigned char cmd_getproduct[30]={0x45};
-// Коды типов разделов
-//-d       - попытка переключить модем из режима HDLC в АТ-режим\n\       
-
+// разбор командной строки
 while ((opt = getopt(argc, argv, "hp:mersng:kf")) != -1) {
   switch (opt) {
    case 'h': 
@@ -192,22 +173,9 @@ if (!nflag) {
 
 // Поиск файлов прошивок в указанном каталоге
 else findfiles(fdir);
-
   
 //------ Режим вывода карты файла прошивки
-//--------------------------------------------
-  
-if (mflag) {
- printf("\n\n ## Смещение  Размер  Сжатие  Имя\n-------------------------------------");
- for (i=0;i<npart;i++) { 
-     printf("\n %02i %08x %8i",i,ptable[i].offset,ptable[i].hd.psize);
-     if (ptable[i].zflag == 0) printf("        ");
-     else printf("  %3i%%   ",(ptable[i].hd.psize-ptable[i].zflag)*100/ptable[i].hd.psize);
-     printf("%s",ptable[i].pname); 
- }   
- printf("\n");
- return;
-}
+if (mflag) show_file_map();
 
 // выход по ошибкам CRC
 if (!fflag && errflag) {
@@ -216,48 +184,20 @@ if (!fflag && errflag) {
 }
 
 //------- Режим разрезания файла прошивки
-//--------------------------------------------
 if (eflag|sflag) {
   fwsplit(sflag);
   printf("\n");
   return;
 }
 
-
 sio:
 //--------- Основной режим - запись прошивки
 //--------------------------------------------
 
 // Настройка SIO
+open_port(devname);
 
-#ifndef WIN32
-
-if (!open_port(devname))  {
-   printf("\n! - Последовательный порт %s не открывается\n", devname); 
-   return; 
-}
-
-tcflush(siofd,TCIOFLUSH);  // очистка выходного буфера
-
-#else
-
-if (*devname == '\0')
-{
-    printf("\n! - Последовательный порт не задан\n"); 
-    return; 
-}
-
-res = open_port(devname);
-if (res == 0)  {
-   printf("\n! - Последовательный порт COM%s не открывается\n", devname); 
-   return; 
-}
-else if (res == -1)  {
-   printf("\n! - Ошибка при инициализации COM-порта\n"); 
-   return; 
-}
-
-#endif
+// Определяем режим порта и версию dload-протокола
 
 res=dloadversion();
 if (res == -1) return;
@@ -267,71 +207,38 @@ if (res == 0) {
 }
 
 // Если надо, отправляем команду цифровой подписи
-if (gflag) {
- res=atcmd(signver,replybuf);
- if (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) {
-   printf("\n ! Ошибка проверки цифровой сигнатуры\n");
-//    return;
-}
-}
+if (gflag) send_signver();
 
 // Входим в HDLC-режим
 
 usleep(100000);
-
-res=atcmd("^DATAMODE",replybuf);
-if (res != 6) {
-  printf("\n Неправильная длина ответа на ^DATAMODE");
-  return;
-}  
-if (memcmp(replybuf,OKrsp,6) != 0) {
-  printf("\n Команда ^DATAMODE отвергнута, возможно требуется режим цифровой подписи\n");
-  return;
-}  
+enter_hdlc();
 
 // Вошли в HDLC
 //------------------------------
 hdlc:
 
-iolen=send_cmd(cmdver,1,replybuf);
-if (iolen == 0) {
-  printf("\n Нет ответа от модема в HDLC-режиме\n");
-  return;
-}  
-if (replybuf[0] == 0x7e) memcpy(replybuf,replybuf+1,iolen-1);
-if (replybuf[0] != 0x0d) {
-  printf("\n Ошибка получения версии протокола\n");
-  return;
-}  
-  
-i=replybuf[1];
-replybuf[2+i]=0;
-printf("ok");
-printf("\n Версия протокола: %s",replybuf+2);
+// получаем версию протокола и идентификатор устройства
+protocol_version();
+dev_ident();
 
-
-iolen=send_cmd(cmd_getproduct,1,replybuf);
-if (iolen>2) printf("\n Идентификатор устройства: %s",replybuf+2); 
 
 printf("\n----------------------------------------------------\n");
 
-if ((optind>=argc)&rflag) goto reset; // перезагрузка без указания файла
+if ((optind>=argc)&rflag) {
+  // перезагрузка без указания файла
+  restart_modem();
+  exit(0);
+}  
 
 // Записываем всю флешку
 flash_all();
 printf("\n");
 
-
 port_timeout(1);
 
 // выходим из режима HDLC и перезагружаемся
-reset:
-
-if (rflag || !kflag) {
-  printf("\n Перезагрузка модема...\n");
-  send_cmd(cmd_reset,1,replybuf);
-  atcmd("^RESET",replybuf);
-}
-// выход из HDLC   
-else send_cmd(cmddone,1,replybuf);
+if (rflag || !kflag) restart_modem();
+// выход из HDLC без перезагрузки
+else leave_hdlc();
 } 

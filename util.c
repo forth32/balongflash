@@ -153,3 +153,112 @@ for (i=0;i<npart;i++) {
 printf("\n");
 return;
 }
+
+
+
+//****************************************************
+//* Вход в HDLC-режим
+//****************************************************
+void enter_hdlc() {
+
+uint32_t res;  
+unsigned char OKrsp[]={0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
+uint8_t replybuf[100]; 
+
+usleep(100000);
+
+res=atcmd("^DATAMODE",replybuf);
+if (res != 6) {
+  printf("\n Неправильная длина ответа на ^DATAMODE");
+  exit(0);
+}  
+if (memcmp(replybuf,OKrsp,6) != 0) {
+  printf("\n Команда ^DATAMODE отвергнута, возможно требуется режим цифровой подписи\n");
+  exit(0);
+}  
+}
+
+//****************************************************
+//* Выход из HDLC-режима
+//****************************************************
+void leave_hdlc() {
+
+uint8_t replybuf[100]; 
+unsigned char cmddone[7]={0x1};           // команда выхода из HDLC
+  
+send_cmd(cmddone,1,replybuf);
+}
+
+
+//****************************************************
+//*  Получение версии протокол прошивки
+//****************************************************
+
+void protocol_version() {
+  
+uint8_t replybuf[100]; 
+uint32_t iolen,i;  
+unsigned char cmdver[7]={0x0c};           // команда запроса версии протокола
+  
+iolen=send_cmd(cmdver,1,replybuf);
+if (iolen == 0) {
+  printf("\n Нет ответа от модема в HDLC-режиме\n");
+  exit(0);
+}  
+if (replybuf[0] == 0x7e) memcpy(replybuf,replybuf+1,iolen-1);
+if (replybuf[0] != 0x0d) {
+  printf("\n Ошибка получения версии протокола\n");
+  exit(0);
+}  
+  
+i=replybuf[1];
+replybuf[2+i]=0;
+printf("\n Версия протокола: %s",replybuf+2);
+}
+
+
+
+//****************************************************
+//*  Перезагрузка модема
+//****************************************************
+void restart_modem() {
+
+unsigned char cmd_reset[7]={0xa};           // команда выхода из HDLC
+uint8_t replybuf[100]; 
+
+printf("\n Перезагрузка модема...\n");
+send_cmd(cmd_reset,1,replybuf);
+atcmd("^RESET",replybuf);
+}
+
+//****************************************************
+//* Получение идентификатора устройства
+//****************************************************
+void dev_ident() {
+  
+uint8_t replybuf[100]; 
+uint32_t iolen;
+unsigned char cmd_getproduct[30]={0x45};
+
+iolen=send_cmd(cmd_getproduct,1,replybuf);
+if (iolen>2) printf("\n Идентификатор устройства: %s",replybuf+2); 
+}
+
+
+//****************************************************
+//* Вывод карты файла прошивки
+//****************************************************
+void show_file_map() {
+
+int i;  
+  
+printf("\n\n ## Смещение  Размер  Сжатие  Имя\n-------------------------------------");
+for (i=0;i<npart;i++) { 
+     printf("\n %02i %08x %8i",i,ptable[i].offset,ptable[i].hd.psize);
+     if (ptable[i].zflag == 0) printf("        ");
+     else printf("  %3i%%   ",(ptable[i].hd.psize-ptable[i].zflag)*100/ptable[i].hd.psize);
+     printf("%s",ptable[i].pname); 
+}   
+ printf("\n");
+ exit(0);
+}
