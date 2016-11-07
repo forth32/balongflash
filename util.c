@@ -262,3 +262,31 @@ for (i=0;i<npart;i++) {
  printf("\n");
  exit(0);
 }
+
+
+//****************************************************
+//* Вывод информации о файле прошивки
+//****************************************************
+void show_fw_info() {
+
+uint8_t* sptr;  
+  
+if (ptable[0].hd.version[0] != ':') printf("\n Версия прошивки: %s",ptable[0].hd.version); // нестандартная строка версии
+else {
+  // стандартная строка версии
+  sptr=strrchr(ptable[0].hd.version+1,':'); // ищем разделитель-двоеточие
+  if (sptr == 0) printf("\n Версия прошивки: %s",ptable[0].hd.version); // не найдено - несоответствие стандарту
+  else {
+    *sptr=0;
+    printf("\n Версия прошивки: %s",sptr+1);
+    printf("\n Платформа:       %s",ptable[0].hd.version+1);
+  }
+}  
+  
+printf("\n Дата сборки:     %s %s",ptable[0].hd.date,ptable[0].hd.time);
+printf("\n Заголовок: версия %i, код соответствия: %8.8s",ptable[0].hd.hdversion,ptable[0].hd.unlock);
+}
+
+
+
+

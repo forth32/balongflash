@@ -166,9 +166,7 @@ if (in == 0) {
 // Поиск разделов внутри файла
 if (!nflag) {
   findparts(in);
-  printf("\n Версия прошивки: %s",ptable[0].hd.version);
-  printf("\n Дата сборки:     %s %s",ptable[0].hd.date,ptable[0].hd.time);
-  printf("\n Заголовок: версия %i,  платформа %8.8s",ptable[0].hd.hdversion,ptable[0].hd.unlock);
+  show_fw_info();
 }  
 
 // Поиск файлов прошивок в указанном каталоге

@@ -9,4 +9,5 @@ void leave_hdlc();
 void restart_modem();
 void dev_ident();
 void show_file_map();
+void show_fw_info();
 
