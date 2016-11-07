@@ -120,8 +120,8 @@ if (strncmp(replybuf+2,"2.0",3) == 0) return 1;
 for (i=2;i<res;i++) {
   if (replybuf[i] == 0x0d) replybuf[i]=0;
 }  
-printf("! Неправильная версия монитора прошивки - [%i]%s\n",res,replybuf+2);
-dump(replybuf,res,0);
+printf("\n! Неправильная версия монитора прошивки - [%i]%s\n",res,replybuf+2);
+// dump(replybuf,res,0);
 return -1;
 }
   
