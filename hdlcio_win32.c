@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <setupapi.h>
 #include <io.h>
 #include "printf.h"
 
@@ -22,6 +23,23 @@ static char pdev[500]; // имя последовательного порта
 int siofd; // fd для работы с Последовательным портом
 static HANDLE hSerial;
 
+static int read(int siofd, void* buf, unsigned int len)
+{
+    DWORD bytes_read = 0;
+
+    ReadFile(hSerial, buf, len, &bytes_read, NULL);
+ 
+    return bytes_read;
+}
+
+static int write(int siofd, void* buf, unsigned int len)
+{
+    DWORD bytes_written = 0;
+
+    WriteFile(hSerial, buf, len, &bytes_written, NULL);
+
+    return bytes_written;
+}
 
 //*************************************************
 //*    отсылка буфера в модем
@@ -157,24 +175,99 @@ if (!send_unframed_buf(outcmdbuf,iolen)) return 0; // ошибка переда�
 return receive_reply(iobuf,0);
 }
 
+DEFINE_GUID(GUID_DEVCLASS_PORTS, 0x4D36E978, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
+
+static int find_port(int* port_no, char* port_name)
+{
+  HDEVINFO device_info_set;
+  DWORD member_index = 0;
+  SP_DEVINFO_DATA device_info_data;
+  DWORD reg_data_type;
+  char property_buffer[256];
+  DWORD required_size;
+  char* p;
+  int result = 1;
+
+  device_info_set = SetupDiGetClassDevs(&GUID_DEVCLASS_PORTS, NULL, 0, DIGCF_PRESENT);
+
+  if (device_info_set == INVALID_HANDLE_VALUE)
+    return result;
+
+  while (TRUE)
+  {
+    ZeroMemory(&device_info_data, sizeof(SP_DEVINFO_DATA));
+    device_info_data.cbSize = sizeof(SP_DEVINFO_DATA);
+
+    if (!SetupDiEnumDeviceInfo(device_info_set, member_index, &device_info_data))
+      break;
+
+    member_index++;
+
+    if (!SetupDiGetDeviceRegistryPropertyA(device_info_set, &device_info_data, SPDRP_HARDWAREID,
+             &reg_data_type, (PBYTE)property_buffer, sizeof(property_buffer), &required_size))
+      continue;
+
+    if (
+        (
+         strstr(_strupr(property_buffer), "VID_12D1&PID_1C05") != NULL &&
+         strstr(_strupr(property_buffer), "&MI_02") != NULL
+        ) ||
+        (
+         strstr(_strupr(property_buffer), "VID_12D1&PID_1442") != NULL &&
+         strstr(_strupr(property_buffer), "&MI_00") != NULL
+        )
+       )
+    {
+      if (SetupDiGetDeviceRegistryPropertyA(device_info_set, &device_info_data, SPDRP_FRIENDLYNAME,
+              &reg_data_type, (PBYTE)property_buffer, sizeof(property_buffer), &required_size))
+      {
+        p = strstr(property_buffer, " (COM");
+        if (p != NULL)
+        {
+          *port_no = atoi(p + 5);
+          strcpy(port_name, property_buffer);
+          result = 0;
+        }
+      }
+      break;
+    }
+  }
+
+  SetupDiDestroyDeviceInfoList(device_info_set);
+
+  return result;
+}
+
 //***************************************************
 // Открытие и настройка последовательного порта
 //***************************************************
 
 int open_port(char* devname) {
 
+DCB dcbSerialParams = {0};
+COMMTIMEOUTS CommTimeouts;
 
 char device[20] = "\\\\.\\COM";
+int port_no;
+char port_name[256];
 
 if (*devname == '\0')
 {
-    printf("\n! - Последовательный порт не задан\n"); 
+  printf("\n\nПоиск прошивочного порта...\n");
+  
+  if (find_port(&port_no, port_name) == 0)
+  {
+    sprintf(devname, "%d", port_no);
+    printf("Порт: \"%s\"\n", port_name);
+  }
+  else
+  {
+    printf("Порт не обнаружен!\n");
     exit(0); 
+  }
+    //printf("\n! - Последовательный порт не задан\n"); 
+    //exit(0); 
 }
-
-
-DCB dcbSerialParams = {0};
-COMMTIMEOUTS CommTimeouts;
 
 strcat(device, devname);
 
@@ -198,7 +291,8 @@ if (!SetCommState(hSerial, &dcbSerialParams))
 {
     CloseHandle(hSerial);
     printf("\n! - Ошибка при инициализации COM-порта\n"); 
-    return -1;
+    exit(0); 
+    //return -1;
 }
 
 CommTimeouts.ReadIntervalTimeout = 5;
@@ -209,11 +303,11 @@ CommTimeouts.WriteTotalTimeoutMultiplier = 0;
 if (!SetCommTimeouts(hSerial, &CommTimeouts))
 {
     CloseHandle(hSerial);
+    printf("\n! - Ошибка при инициализации COM-порта\n"); 
     exit(0); 
 }
 
 PurgeComm(hSerial, PURGE_RXCLEAR);
-
 
 return 1;
 }

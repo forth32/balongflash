@@ -1,8 +1,13 @@
 
 
 // структура описания заголовка раздела
+#ifndef WIN32
 struct __attribute__ ((__packed__)) pheader {
- uint32_t magic;    //   0xa55aaa55
+#else
+#pragma pack(push,1)
+struct pheader {
+#endif
+ int32_t magic;    //   0xa55aaa55
  uint32_t hdsize;   // размер заголовка
  uint32_t hdversion;
  uint8_t unlock[8];
@@ -14,6 +19,9 @@ struct __attribute__ ((__packed__)) pheader {
  uint16_t crc;   // CRC заголовка
  uint32_t blocksize;  // размер блока CRC образа прошивки
 }; 
+#ifdef WIN32
+#pragma pack(pop)
+#endif
 
 
 // Структура описания таблицы разделов

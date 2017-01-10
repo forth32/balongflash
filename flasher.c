@@ -56,12 +56,20 @@ int dload_start(uint32_t code,uint32_t size) {
 uint32_t iolen;  
 uint8_t replybuf[4096];
   
+#ifndef WIN32
 static struct __attribute__ ((__packed__))  {
+#else
+#pragma pack(push,1)
+static struct {
+#endif
   uint8_t cmd;
   uint32_t code;
   uint32_t size;
   uint8_t pool[3];
 } cmd_dload_init =  {0x41,0,0,{0,0,0}};
+#ifdef WIN32
+#pragma pack(pop)
+#endif
 
 
 cmd_dload_init.code=htonl(code);
@@ -90,13 +98,21 @@ int dload_block(uint32_t part, uint32_t blk, uint8_t* pimage) {
 uint32_t res,blksize,iolen;
 uint8_t replybuf[4096];
 
+#ifndef WIN32
 static struct __attribute__ ((__packed__)) {
+#else
+#pragma pack(push,1)
+static struct {
+#endif
   uint8_t cmd;
   uint32_t blk;
   uint16_t bsize;
   uint8_t data[fblock];
 } cmd_dload_block;  
-  
+#ifdef WIN32
+#pragma pack(pop)
+#endif
+
 blksize=fblock; // начальное значение размера блока
 res=ptable[part].hd.psize-blk*fblock;  // размер оставшегося куска до конца файла
 if (res<fblock) blksize=res;  // корректируем размер последнего блока
@@ -136,13 +152,21 @@ int dload_end(uint32_t code, uint32_t size) {
 uint32_t iolen;
 uint8_t replybuf[4096];
 
+#ifndef WIN32
 static struct __attribute__ ((__packed__)) {
+#else
+#pragma pack(push,1)
+static struct {
+#endif
   uint8_t cmd;
   uint32_t size;
   uint8_t garbage[3];
   uint32_t code;
   uint8_t garbage1[11];
 } cmd_dload_end;
+#ifdef WIN32
+#pragma pack(pop)
+#endif
 
 
 cmd_dload_end.cmd=0x43;
