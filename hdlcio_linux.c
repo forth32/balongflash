@@ -258,7 +258,6 @@ while ((dentry=readdir(fdir)) != 0) {
 }
 
 closedir(fdir);
-
 // формируем полное имя файла в буфере результата
 if (dentry == 0) return 0; // не нашли
 strcpy(filename,dirname);
@@ -304,7 +303,6 @@ if (pt == 0xa55aaa55) {
 fseek(in,0,SEEK_END);
 *size=ftell(in);
 fclose(in);
-
 
 return 1;
 }

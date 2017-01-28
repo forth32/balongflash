@@ -284,13 +284,13 @@ void findfiles (char* fdir) {
 char filename[200];  
 FILE* in;
   
-printf("\n Поиск файлов-образов разделов...\n\n ##   Размер      ID       Имя       Файл\n-----------------------------------------------------------------\n");
+printf("\n Поиск файлов-образов разделов...\n\n ##   Размер      ID        Имя          Файл\n-----------------------------------------------------------------\n");
 
 for (npart=0;npart<30;npart++) {
     if (find_file(npart, fdir, filename, &ptable[npart].hd.code, &ptable[npart].hd.psize) == 0) break; // конец поиска - раздела с таким ID не нашли
     // получаем символическое имя раздела
     find_pname(ptable[npart].hd.code,ptable[npart].pname);
-    printf("\n %02i  %8i  %08x  %-8.8s  %s",npart,ptable[npart].hd.psize,ptable[npart].hd.code,ptable[npart].pname,filename);
+    printf("\n %02i  %8i  %08x  %-14.14s  %s",npart,ptable[npart].hd.psize,ptable[npart].hd.code,ptable[npart].pname,filename);fflush(stdout);
     
     // распределяем память под образ раздела
     ptable[npart].pimage=malloc(ptable[npart].hd.psize);
@@ -300,6 +300,11 @@ for (npart=0;npart<30;npart++) {
     }
     
     // читаем образ в буфер
+    in=fopen(filename,"r");
+    if (in == 0) {
+      printf("\n Ошибка открытия файла %s",filename);
+      return;
+    } 
     fread(ptable[npart].pimage,ptable[npart].hd.psize,1,in);
     fclose(in);
       
