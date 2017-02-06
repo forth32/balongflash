@@ -144,7 +144,7 @@ for (i=0;i<npart;i++) {
    if(sflag) {
      // запись заголовка
      fwrite(&ptable[i].hd,1,sizeof(struct pheader),out);   // фиксированный заголовок
-     fwrite(&ptable[i].csumblock,1,ptable[i].hd.hdsize-sizeof(struct pheader),out); // блок контрольных сумм
+     fwrite((void*)ptable[i].csumblock,1,ptable[i].hd.hdsize-sizeof(struct pheader),out); // блок контрольных сумм
    }
    // запись тела
    fwrite(ptable[i].pimage,ptable[i].hd.psize,1,out);
