@@ -53,7 +53,7 @@ struct {
   {"APP",0x570000}, 
   {"APP",0x5a0000}, 
   {"APP_EXT_A",0x450000}, 
-  {"APP_EXT_B",0x46000},
+  {"APP_EXT_B",0x460000},
   {"Oeminfo",0xa0000},
   {"CDROMISO",0xb0000},
   {"Oeminfo",0x550000},
