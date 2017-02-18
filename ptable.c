@@ -32,10 +32,13 @@ struct {
   {"M3Boot-ptable",0x10000}, 
   {"M3Boot_R11",0x200000}, 
   {"Ptable",0x10000},
+  {"Ptable_ext_A",0x480000},
+  {"Ptable_ext_B",0x490000},
   {"Fastboot",0x110000},
   {"Logo",0x130000},
   {"Kernel",0x30000},
   {"Kernel_R11",0x90000},
+  {"DTS_R11",0x270000},
   {"VxWorks",0x40000},
   {"VxWorks_R11",0x220000},
   {"M3Image",0x50000},
@@ -72,6 +75,7 @@ struct {
   {"Nvimage_R1",0x66},
   {"WEBUI_R1",0x113},
   {"APP_R1",0x109},
+  {"HIFI_R11",0x280000},
   {0,0}
 };
 
