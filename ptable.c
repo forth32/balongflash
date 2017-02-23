@@ -195,7 +195,7 @@ calc_crc16(npart);
 if (crcblocksize != crcsize(npart)) {
     printf("\n! Раздел %s (%02x) - неправильный размер блока контрольных сумм",ptable[npart].pname,ptable[npart].hd.code>>16);
     errflag=1;
-}  
+}    
   
 else if (memcmp(crcblock,ptable[npart].csumblock,crcblocksize) != 0) {
     printf("\n! Раздел %s (%02x) - неправильная блочная контрольная сумма",ptable[npart].pname,ptable[npart].hd.code>>16);
@@ -230,8 +230,10 @@ if ((*(uint16_t*)ptable[npart].pimage) == 0xda78) {
 
 // продвигаем счетчик разделов
 npart++;
-// отъезжаем немного назад
-fseek(in,-16,SEEK_CUR);
+
+// отъезжаем, если надо, вперед на границу слова
+res=ftell(in);
+if ((res&3) != 0) fseek(in,(res+4)&(~3),SEEK_SET);
 }
 
 
@@ -270,14 +272,14 @@ fread(prefix,0x5c,1,in);
 printf("\n Код файла прошивки: %i (0x%x)",*((uint32_t*)&prefix[0]),*((uint32_t*)&prefix[0]));
 
 // поиск остальных разделов
-while (fread(&i,1,4,in) == 4) {
-  if (i != dpattern) {
-    fseek(in,-3,SEEK_CUR);
-    continue; // ищем разделитель
-  }
-  fseek(in,-4,SEEK_CUR);
-  extract(in);
-}
+
+do {
+  if (fread(&i,1,4,in) != 4) break; // конец файла
+  if (i != dpattern) break;         // образец не найден - конец цепочки разделов
+  fseek(in,-4,SEEK_CUR);            // отъезжаем назад, на начало заголовка
+  extract(in);                      // извлекаем раздел
+} while(1);
+  
 return npart;
 }
 
