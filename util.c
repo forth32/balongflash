@@ -269,17 +269,20 @@ for (i=0;i<npart;i++) {
 //****************************************************
 void show_fw_info() {
 
-uint8_t* sptr;  
+uint8_t* sptr; 
+char ver[36];
   
 if (ptable[0].hd.version[0] != ':') printf("\n Версия прошивки: %s",ptable[0].hd.version); // нестандартная строка версии
 else {
   // стандартная строка версии
-  sptr=strrchr(ptable[0].hd.version+1,':'); // ищем разделитель-двоеточие
-  if (sptr == 0) printf("\n Версия прошивки: %s",ptable[0].hd.version); // не найдено - несоответствие стандарту
+  memset(ver,0,sizeof(ver));  
+  strncpy(ver,ptable[0].hd.version,32);  
+  sptr=strrchr(ver+1,':'); // ищем разделитель-двоеточие
+  if (sptr == 0) printf("\n Версия прошивки: %s",ver); // не найдено - несоответствие стандарту
   else {
     *sptr=0;
     printf("\n Версия прошивки: %s",sptr+1);
-    printf("\n Платформа:       %s",ptable[0].hd.version+1);
+    printf("\n Платформа:       %s",ver+1);
   }
 }  
   
