@@ -16,7 +16,6 @@
 #else
 #include <windows.h>
 #include "getopt.h"
-#include "printf.h"
 #include "buildno.h"
 #endif
 
@@ -120,7 +119,7 @@ if (strncmp(replybuf+2,"2.0",3) == 0) return 1;
 for (i=2;i<res;i++) {
   if (replybuf[i] == 0x0d) replybuf[i]=0;
 }  
-printf("\n! Неправильная версия монитора прошивки - [%i]%s\n",res,replybuf+2);
+printf(_("\n! Invalid firmare monitor version - [%i]%s\n"),res,replybuf+2);
 // dump(replybuf,res,0);
 return -1;
 }
@@ -134,7 +133,8 @@ uint32_t i;
 FILE* out;
 uint8_t filename[200];
 
-printf("\n Выделение разделов из файла прошивки:\n\n ## Смещение  Размер   Имя\n-------------------------------------");
+printf(_("\n Extracting partitions from firmware file:\n"
+         "\n ## Offset    Size     Name\n-------------------------------------"));
 for (i=0;i<npart;i++) {  
    printf("\n %02i %08x %8i  %s",i,ptable[i].offset,ptable[i].hd.psize,ptable[i].pname); 
    // формируем имя файла
@@ -169,11 +169,11 @@ usleep(100000);
 
 res=atcmd("^DATAMODE",replybuf);
 if (res != 6) {
-  printf("\n Неправильная длина ответа на ^DATAMODE");
+  printf(_("\n Invalid answer length to ^DATAMODE"));
   exit(0);
 }  
 if (memcmp(replybuf,OKrsp,6) != 0) {
-  printf("\n Команда ^DATAMODE отвергнута, возможно требуется режим цифровой подписи\n");
+  printf(_("\n ^DATAMODE command rejected, setting digital signature mode may be required\n"));
   exit(0);
 }  
 }
@@ -202,18 +202,18 @@ unsigned char cmdver[7]={0x0c};           // команда запроса ве�
   
 iolen=send_cmd(cmdver,1,replybuf);
 if (iolen == 0) {
-  printf("\n Нет ответа от модема в HDLC-режиме\n");
+  printf(_("\n No answer from modem in HDLC-mode\n"));
   exit(0);
 }  
 if (replybuf[0] == 0x7e) memcpy(replybuf,replybuf+1,iolen-1);
 if (replybuf[0] != 0x0d) {
-  printf("\n Ошибка получения версии протокола\n");
+  printf(_("\n Error getting protocol version\n"));
   exit(0);
 }  
   
 i=replybuf[1];
 replybuf[2+i]=0;
-printf("\n Версия протокола: %s",replybuf+2);
+printf(_("\n Protocol version: %s"),replybuf+2);
 }
 
 
@@ -226,7 +226,7 @@ void restart_modem() {
 unsigned char cmd_reset[7]={0xa};           // команда выхода из HDLC
 uint8_t replybuf[100]; 
 
-printf("\n Перезагрузка модема...\n");
+printf(_("\n Rebooting modem...\n"));
 send_cmd(cmd_reset,1,replybuf);
 atcmd("^RESET",replybuf);
 }
@@ -241,7 +241,7 @@ uint32_t iolen;
 unsigned char cmd_getproduct[30]={0x45};
 
 iolen=send_cmd(cmd_getproduct,1,replybuf);
-if (iolen>2) printf("\n Идентификатор устройства: %s",replybuf+2); 
+if (iolen>2) printf(_("\n Device identifier: %s"),replybuf+2); 
 }
 
 
@@ -252,7 +252,7 @@ void show_file_map() {
 
 int i;  
   
-printf("\n\n ## Смещение  Размер  Сжатие  Имя\n-------------------------------------");
+printf(_("\n\n ## Offset    Size    Compr.  Name\n-------------------------------------"));
 for (i=0;i<npart;i++) { 
      printf("\n %02i %08x %8i",i,ptable[i].offset,ptable[i].hd.psize);
      if (ptable[i].zflag == 0) printf("        ");
@@ -272,22 +272,22 @@ void show_fw_info() {
 uint8_t* sptr; 
 char ver[36];
   
-if (ptable[0].hd.version[0] != ':') printf("\n Версия прошивки: %s",ptable[0].hd.version); // нестандартная строка версии
+if (ptable[0].hd.version[0] != ':') printf(_("\n Firmware version: %s"),ptable[0].hd.version); // нестандартная строка версии
 else {
   // стандартная строка версии
   memset(ver,0,sizeof(ver));  
   strncpy(ver,ptable[0].hd.version,32);  
   sptr=strrchr(ver+1,':'); // ищем разделитель-двоеточие
-  if (sptr == 0) printf("\n Версия прошивки: %s",ver); // не найдено - несоответствие стандарту
+  if (sptr == 0) printf(_("\n Firmware version: %s"),ver); // не найдено - несоответствие стандарту
   else {
     *sptr=0;
-    printf("\n Версия прошивки: %s",sptr+1);
-    printf("\n Платформа:       %s",ver+1);
+    printf(_("\n Firmware version: %s"),sptr+1);
+    printf(_("\n Platform:         %s"),ver+1);
   }
 }  
   
-printf("\n Дата сборки:     %s %s",ptable[0].hd.date,ptable[0].hd.time);
-printf("\n Заголовок: версия %i, код соответствия: %8.8s",ptable[0].hd.hdversion,ptable[0].hd.unlock);
+printf(_("\n Build date:       %s %s"),ptable[0].hd.date,ptable[0].hd.time);
+printf(_("\n Header: version %i, compatibility code: %8.8s"),ptable[0].hd.hdversion,ptable[0].hd.unlock);
 }
 
 

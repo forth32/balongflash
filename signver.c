@@ -16,7 +16,6 @@
 #else
 #include <windows.h>
 #include "getopt.h"
-#include "printf.h"
 #include "buildno.h"
 #endif
 
@@ -33,13 +32,13 @@ struct {
   uint32_t len;
   char* descr;
 } signbase[] = {
-  {1,2958,"Основная прошивка"},
-  {1,2694,"Прошивка E3372s-stick"},
-  {2,1110,"Вебинтерфейс+ISO для HLINK-модема"},
-  {6,1110,"Вебинтерфейс+ISO для HLINK-модема"},
-  {2,846,"ISO (dashboard) для stick-модема"},
-  {7,3750,"Прошивка+ISO+вебинтерфейс"},
-  {99,3750,"универсальная"},
+  {1,2958,_noop("Main firmware")},
+  {1,2694,_noop("E3372s-stick firmware")},
+  {2,1110,_noop("WebUI+ISO for HLINK modem")},
+  {6,1110,_noop("WebUI+ISO for HLINK modem")},
+  {2,846,_noop("ISO (dashboard) for stick modem")},
+  {7,3750,_noop("Firmware+ISO+WebUI")},
+  {99,3750,_noop("Universal")},
 };
 
 #define signbaselen 7
@@ -85,11 +84,11 @@ return 0;
 void glist() {
   
 int i;
-printf("\n #  длина  тип описание \n--------------------------------------");
+printf(_("\n # length type  description \n--------------------------------------"));
 for (i=0; i<signbaselen; i++) {
-  printf("\n%1i  %5i  %2i   %s",i,signbase[i].len,signbase[i].type,signbase[i].descr);
+  printf("\n %1i  %5i   %2i  %s",i,signbase[i].len,signbase[i].type,_(signbase[i].descr));
 }
-printf("\n\n Также можно указать произвольные параметры подписи в формате:\n  -g *,type,len\n\n");
+printf(_("\n\n Custom signature parameters can be specified in the following format:\n  -g *,type,len\n\n"));
 exit(0);
 }
 
@@ -108,7 +107,7 @@ uint32_t signlen;  // длина подписи
 
 
 if (gflag != 0) {
-  printf("\n Дублирующийся ключ -g\n\n");
+  printf(_("\n -g can be specified only once\n\n"));
   exit(0);
 }  
 
@@ -131,7 +130,7 @@ if (strncmp(parm,"*,",2) == 0) {
   if (sptr == 0) goto perror;
   signtype=atoi(sptr+1);
   if (fw_description(signtype) == 0) {
-    printf("\n Ключ -g: неизвестный тип прошивки - %i\n",signtype);
+    printf(_("\n -g: unknown firmware type - %i\n"),signtype);
     exit(0);
   }  
 }
@@ -144,12 +143,12 @@ else {
 
 gflag=1;
 sprintf(signver,"^SIGNVER=%i,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,%i",signtype,signlen);
-printf("\n Режим цифровой подписи: %s (%i байт)",fw_description(signtype),signlen);
+printf(_("\n Digital signature mode: %s (%i bytes)"),fw_description(signtype),signlen);
 // printf("\nstr - %s",signver);
 return;
 
 perror:
- printf("\n Ошибка в параметрах ключа -g\n");
+ printf(_("\n Invalid -g parameters\n"));
  exit(0);
 } 
   
@@ -166,6 +165,6 @@ uint8_t replybuf[200];
   
 res=atcmd(signver,replybuf);
 if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
-   printf("\n ! Ошибка проверки цифровой сигнатуры - %02x\n",replybuf[2]);
+   printf(_("\n ! Digital signature verification failed - %02x\n"),replybuf[2]);
 }
 }
