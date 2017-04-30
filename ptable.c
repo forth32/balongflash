@@ -214,7 +214,7 @@ if ((*(uint16_t*)ptable[npart].pimage) == 0xda78) {
   res=uncompress (zbuf, &zlen, ptable[npart].pimage, ptable[npart].hd.psize);
   if (res != Z_OK) {
     printf("\n! Ошибка распаковки раздела %s (%02x)\n",ptable[npart].pname,ptable[npart].hd.code>>16);
-    exit(0);
+    errflag=1;
   }
   // создаем новый буфер образа раздела и копируем в него рапаковынные данные
   free(ptable[npart].pimage);
