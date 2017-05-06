@@ -200,7 +200,7 @@ printf("\n");
  if (!dload_start(ptable[part].hd.code,ptable[part].hd.psize)) {
    printf("\r! Отвергнут заголовок раздела %i (%s)",part,ptable[part].pname);
    printerr();
-   return;
+   exit(-2);
  }  
     
  maxblock=(ptable[part].hd.psize+(fblock-1))/fblock; // число блоков в разделе
@@ -213,7 +213,7 @@ printf("\n");
   if (!dload_block(part,blk,ptable[part].pimage)) {
    printf("\n! Отвергнут блок %i раздела %i (%s)",blk,part,ptable[part].pname);
    printerr();
-   return;
+   exit(-2);
   }  
  }    
 
@@ -221,7 +221,7 @@ printf("\n");
  if (!dload_end(ptable[part].hd.code,ptable[part].hd.psize)) {
    printf("\n! Ошибка закрытия раздела %i (%s)",part,ptable[part].pname);
    printerr();
-   return;
+   exit(-2);
  }  
 } // конец цикла по разделам
 }

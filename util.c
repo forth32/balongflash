@@ -170,11 +170,11 @@ usleep(100000);
 res=atcmd("^DATAMODE",replybuf);
 if (res != 6) {
   printf("\n Неправильная длина ответа на ^DATAMODE");
-  exit(0);
+  exit(-2);
 }  
 if (memcmp(replybuf,OKrsp,6) != 0) {
   printf("\n Команда ^DATAMODE отвергнута, возможно требуется режим цифровой подписи\n");
-  exit(0);
+  exit(-2);
 }  
 }
 
@@ -203,12 +203,12 @@ unsigned char cmdver[7]={0x0c};           // команда запроса ве�
 iolen=send_cmd(cmdver,1,replybuf);
 if (iolen == 0) {
   printf("\n Нет ответа от модема в HDLC-режиме\n");
-  exit(0);
+  exit(-2);
 }  
 if (replybuf[0] == 0x7e) memcpy(replybuf,replybuf+1,iolen-1);
 if (replybuf[0] != 0x0d) {
   printf("\n Ошибка получения версии протокола\n");
-  exit(0);
+  exit(-2);
 }  
   
 i=replybuf[1];

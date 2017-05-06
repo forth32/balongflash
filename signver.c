@@ -109,7 +109,7 @@ uint32_t signlen;  // длина подписи
 
 if (gflag != 0) {
   printf("\n Дублирующийся ключ -g\n\n");
-  exit(0);
+  exit(-1);
 }  
 
 strcpy(parm,sparm); // локальная копия параметров
@@ -132,7 +132,7 @@ if (strncmp(parm,"*,",2) == 0) {
   signtype=atoi(sptr+1);
   if (fw_description(signtype) == 0) {
     printf("\n Ключ -g: неизвестный тип прошивки - %i\n",signtype);
-    exit(0);
+    exit(-1);
   }  
 }
 else {  
@@ -150,7 +150,7 @@ return;
 
 perror:
  printf("\n Ошибка в параметрах ключа -g\n");
- exit(0);
+ exit(-1);
 } 
   
 
@@ -167,5 +167,6 @@ uint8_t replybuf[200];
 res=atcmd(signver,replybuf);
 if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
    printf("\n ! Ошибка проверки цифровой сигнатуры - %02x\n",replybuf[2]);
+   exit(-2);
 }
 }
