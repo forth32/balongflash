@@ -1,3 +1,8 @@
+#include <libintl.h>
+
+#define _(STRING) gettext(STRING)
+#define _noop(STRING) (STRING)
+
 #include <stdint.h>
 void dump(char buffer[],int len,long base);
 unsigned short crc16(char* buf, int len);

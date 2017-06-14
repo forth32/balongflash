@@ -1,0 +1,662 @@
+# Russian translations for balongflash package.
+# Copyright (C) 2015 forth32
+# This file is distributed under the same license as the balongflash package.
+# mityada <mityada@gmail.com>, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: balongflash 3.0.235\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-04-01 13:21+0300\n"
+"PO-Revision-Date: 2017-03-30 13:35+0300\n"
+"Last-Translator: mityada <mityada@gmail.com>\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: balong_flash.c:62
+#, c-format
+msgid ""
+"\n"
+" Flasher tool for USB-modems on Balong V7 chipset\n"
+"\n"
+"%s [option] <file or directory>\n"
+"\n"
+" options:\n"
+"\n"
+"-p <tty> - bootloader serial port%s\n"
+"-n       - flash multiple files from directory\n"
+"-g#      - digital signature mode (use '-gl' to list modes)\n"
+"-m       - print firmware map and exit\n"
+"-e       - split firmware by partitions without headers\n"
+"-s       - split firmware by partitions with headers\n"
+"-k       - do not reboot modem after flashing\n"
+"-r       - reboot modem without flashing\n"
+"-f       - ignore CRC errors in firmware file\n"
+"\n"
+msgstr ""
+"\n"
+" Утилита предназначена для прошивки модемов на чипсете Balong V7\n"
+"\n"
+"%s [ключи] <имя файла для загрузки или имя каталога с файлами>\n"
+"\n"
+" допустимы следующие ключи:\n"
+"\n"
+"-p <tty> - последовательный порт для общения с загрузчиком%s\n"
+"-n       - режим мультифайловой прошивки из указанного каталога\n"
+"-g#      - установка режима цифровой подписи (-gl - описание параметров)\n"
+"-m       - вывести карту файла прошивки и завершить работу\n"
+"-e       - разобрать файл прошивки на разделы без заголовков\n"
+"-s       - разобрать файл прошивки на разделы с заголовками\n"
+"-k       - не перезагружать модем по окончании прошивки\n"
+"-r       - принудительно перезагрузить модем без прошивки разделов\n"
+"-f       - прошить даже при наличии ошибок CRC в исходном файле\n"
+"\n"
+
+#: balong_flash.c:76
+msgid " (default is /dev/ttyUSB0)"
+msgstr " (по умолчанию /dev/ttyUSB0)"
+
+#: balong_flash.c:124
+#, c-format
+msgid ""
+"\n"
+" Flasher tool for Balong-based devices, V3.0.%i, (c) forth32, 2015, GNU GPLv3"
+msgstr ""
+"\n"
+" Программа для прошивки устройств на Balong-чипсете, V3.0.%i, (c) forth32, "
+"2015, GNU GPLv3"
+
+#: balong_flash.c:126
+#, c-format
+msgid ""
+"\n"
+" Windows 32bit port (c) rust3028, 2016"
+msgstr ""
+"\n"
+" Порт для Windows 32bit  (c) rust3028, 2016"
+
+#: balong_flash.c:131
+#, c-format
+msgid ""
+"\n"
+" Options -s and -e are incompatiple\n"
+msgstr ""
+"\n"
+" Ключи -s и -e несовместимы\n"
+
+#: balong_flash.c:136
+#, c-format
+msgid ""
+"\n"
+" Options -k and -r are incompatiple\n"
+msgstr ""
+"\n"
+" Ключи -k и -r несовместимы\n"
+
+#: balong_flash.c:141
+#, c-format
+msgid ""
+"\n"
+" Option -n is not compatible with options -s, -m and -e\n"
+msgstr ""
+"\n"
+" Ключ -n несовместим с ключами -s, -m и -e\n"
+
+#: balong_flash.c:155
+#, c-format
+msgid ""
+"\n"
+" - Directory is missing\n"
+msgstr ""
+"\n"
+" - Не указан каталог с файлами\n"
+
+#: balong_flash.c:157
+#, c-format
+msgid ""
+"\n"
+" - Filename is missing, use -h for help\n"
+msgstr ""
+"\n"
+" - Не указано имя файла для загрузки, используйте ключ -h для подсказки\n"
+
+#: balong_flash.c:168
+#, c-format
+msgid ""
+"\n"
+" Cannot open %s"
+msgstr ""
+"\n"
+" Ошибка открытия %s"
+
+#: balong_flash.c:188
+#, c-format
+msgid ""
+"\n"
+"\n"
+"! Errors in input file - quitting\n"
+msgstr ""
+"\n"
+"\n"
+"! Входной файл содержит ошибки - завершаем работу\n"
+
+#: balong_flash.c:211
+#, c-format
+msgid ""
+"\n"
+" Modem is already in HDLC-mode"
+msgstr ""
+"\n"
+" Модем уже находится в HDLC-режиме"
+
+#: flasher.c:40
+#, c-format
+msgid " - command timeout\n"
+msgstr " - таймаут команды\n"
+
+#: flasher.c:41
+#, c-format
+msgid " - error code %02x\n"
+msgstr " - код ошибки %02x\n"
+
+#: flasher.c:194
+#, c-format
+msgid ""
+"\n"
+"##  --- Partition name --- written"
+msgstr ""
+"\n"
+"##  ---- Имя раздела ---- записано"
+
+#: flasher.c:201
+#, c-format
+msgid ""
+"\n"
+"! Partition %i (%s) header rejected"
+msgstr ""
+"\n"
+"! Отвергнут заголовок раздела %i (%s)"
+
+#: flasher.c:214
+#, c-format
+msgid ""
+"\n"
+"! Partition %i (%s) block %i rejected"
+msgstr ""
+"\n"
+"! Раздел %i (%s): отвергнут блок %i"
+
+#: flasher.c:222
+#, c-format
+msgid ""
+"\n"
+"! Error closing partition %i (%s)"
+msgstr ""
+"\n"
+"! Ошибка закрытия раздела %i (%s)"
+
+#. сбрасываем недочитанный буфер ввода
+#. отсылаем префикс
+#: hdlcio_linux.c:42 hdlcio_win32.c:54
+#, c-format
+msgid ""
+"\n"
+" Error writing command"
+msgstr ""
+"\n"
+" Ошибка записи команды"
+
+#: hdlcio_linux.c:76 hdlcio_win32.c:88
+#, c-format
+msgid ""
+"\n"
+"Modem answer is too short: %i bytes, expected %i bytes\n"
+msgstr ""
+"\n"
+"Слишком короткий ответ от модема: %i байт, ожидалось %i байт\n"
+
+#: hdlcio_linux.c:195
+#, c-format
+msgid ""
+"\n"
+"! - Cannot open serial port %s\n"
+msgstr ""
+"\n"
+"! - Последовательный порт %s не открывается\n"
+
+#: hdlcio_linux.c:250
+#, c-format
+msgid ""
+"\n"
+" Cannot open directory %s\n"
+msgstr ""
+"\n"
+" Каталог %s не открывается\n"
+
+#: hdlcio_linux.c:271 hdlcio_win32.c:358
+#, c-format
+msgid ""
+"\n"
+" Invalid filename format - %s\n"
+msgstr ""
+"\n"
+" Неправильный формат имени файла - %s\n"
+
+#: hdlcio_linux.c:277 hdlcio_win32.c:364
+#, c-format
+msgid ""
+"\n"
+" Invalid parition identifier - non-digit character - %s\n"
+msgstr ""
+"\n"
+" Ошибка в идентификаторе раздела - нецифровой знак - %s\n"
+
+#: hdlcio_linux.c:285 hdlcio_win32.c:372
+#, c-format
+msgid ""
+"\n"
+" Error opening file %s\n"
+msgstr ""
+"\n"
+" Ошибка открытия файла %s\n"
+
+#: hdlcio_linux.c:289 hdlcio_win32.c:376
+#, c-format
+msgid ""
+"\n"
+" Error reading file %s\n"
+msgstr ""
+"\n"
+" Ошибка чтения файла %s\n"
+
+#: hdlcio_linux.c:295 hdlcio_win32.c:382
+#, c-format
+msgid ""
+"\n"
+" File %s has a header - cannot flash\n"
+msgstr ""
+"\n"
+" Файл %s имеет заголовок - для прошивки не подходит\n"
+
+#: hdlcio_win32.c:256
+#, c-format
+msgid ""
+"\n"
+"\n"
+"Searching for serial port...\n"
+msgstr ""
+"\n"
+"\n"
+"Поиск прошивочного порта...\n"
+
+#: hdlcio_win32.c:261
+#, c-format
+msgid "Port: \"%s\"\n"
+msgstr "Порт: \"%s\"\n"
+
+#: hdlcio_win32.c:265
+#, c-format
+msgid "Port not found!\n"
+msgstr "Порт не обнаружен!\n"
+
+#: hdlcio_win32.c:277
+#, c-format
+msgid ""
+"\n"
+"! - Cannot open serial port COM%s\n"
+msgstr ""
+"\n"
+"! - Последовательный порт COM%s не открывается\n"
+
+#: hdlcio_win32.c:293 hdlcio_win32.c:306
+#, c-format
+msgid ""
+"\n"
+"! - Serial port initialization failed\n"
+msgstr ""
+"\n"
+"! - Ошибка при инициализации COM-порта\n"
+
+#: ptable.c:188
+#, c-format
+msgid ""
+"\n"
+"! Partition %s (%02x) - header checksum error"
+msgstr ""
+"\n"
+"! Раздел %s (%02x) - ошибка контрольной суммы заголовка"
+
+#: ptable.c:196
+#, c-format
+msgid ""
+"\n"
+"! Partition %s (%02x) - invalid checksum block size"
+msgstr ""
+"\n"
+"! Раздел %s (%02x) - неправильный размер блока контрольных сумм"
+
+#: ptable.c:201
+#, c-format
+msgid ""
+"\n"
+"! Partition %s (%02x) - invalid checksum block"
+msgstr ""
+"\n"
+"! Раздел %s (%02x) - неправильная блочная контрольная сумма"
+
+#: ptable.c:216
+#, c-format
+msgid ""
+"\n"
+"! Error uncompressing partition %s (%02x)\n"
+msgstr ""
+"\n"
+"! Ошибка распаковки раздела %s (%02x)\n"
+
+#: ptable.c:259
+#, c-format
+msgid ""
+"\n"
+" Unable to find partitions - file does not contain a firmware image\n"
+msgstr ""
+"\n"
+" В файле не найдены разделы - файл не содержит образа прошивки\n"
+
+#: ptable.c:265
+#, c-format
+msgid ""
+"\n"
+" Invalid file header size\n"
+msgstr ""
+"\n"
+" Заголовок файла имеет неправильный размер\n"
+
+#: ptable.c:272
+#, c-format
+msgid ""
+"\n"
+" Firmare file code: %i (0x%x)"
+msgstr ""
+"\n"
+" Код файла прошивки: %i (0x%x)"
+
+#: ptable.c:295
+#, c-format
+msgid ""
+"\n"
+" Searching for partition files...\n"
+"\n"
+" ##   Size        ID        Name         File\n"
+"-----------------------------------------------------------------\n"
+msgstr ""
+"\n"
+" Поиск файлов-образов разделов...\n"
+"\n"
+" ##   Размер      ID        Имя          Файл\n"
+"-----------------------------------------------------------------\n"
+
+#: ptable.c:306
+#, c-format
+msgid ""
+"\n"
+"! Error allocating memory, partition #%i, size = %i bytes\n"
+msgstr ""
+"\n"
+"! Ошибка распределения памяти, раздел #%i, размер = %i байт\n"
+
+#: ptable.c:313
+#, c-format
+msgid ""
+"\n"
+" Error opening %s"
+msgstr ""
+"\n"
+" Ошибка открытия файла %s"
+
+#: ptable.c:321
+#, c-format
+msgid ""
+"\n"
+"! No partition files found in directory %s"
+msgstr ""
+"\n"
+"! Не найдено ни одного файла с образом раздела в каталоге %s"
+
+#: signver.c:36
+msgid "Main firmware"
+msgstr "Основная прошивка"
+
+#: signver.c:37
+msgid "E3372s-stick firmware"
+msgstr "Прошивка E3372s-stick"
+
+#: signver.c:38 signver.c:39
+msgid "WebUI+ISO for HLINK modem"
+msgstr "Вебинтерфейс+ISO для HLINK-модема"
+
+#: signver.c:40
+msgid "ISO (dashboard) for stick modem"
+msgstr "ISO (dashboard) для stick-модема"
+
+#: signver.c:41
+msgid "Firmware+ISO+WebUI"
+msgstr "Прошивка+ISO+вебинтерфейс"
+
+#: signver.c:42
+msgid "Universal"
+msgstr "универсальная"
+
+#: signver.c:88
+#, c-format
+msgid ""
+"\n"
+" # length type  description \n"
+"--------------------------------------"
+msgstr ""
+"\n"
+" #  длина  тип  описание \n"
+"--------------------------------------"
+
+#: signver.c:92
+#, c-format
+msgid ""
+"\n"
+"\n"
+" Custom signature parameters can be specified in the following format:\n"
+"  -g *,type,len\n"
+"\n"
+msgstr ""
+"\n"
+"\n"
+" Также можно указать произвольные параметры подписи в формате:\n"
+"  -g *,type,len\n"
+"\n"
+
+#: signver.c:111
+#, c-format
+msgid ""
+"\n"
+" -g can be specified only once\n"
+"\n"
+msgstr ""
+"\n"
+" Дублирующийся ключ -g\n"
+"\n"
+
+#: signver.c:134
+#, c-format
+msgid ""
+"\n"
+" -g: unknown firmware type - %i\n"
+msgstr ""
+"\n"
+" Ключ -g: неизвестный тип прошивки - %i\n"
+
+#: signver.c:147
+#, c-format
+msgid ""
+"\n"
+" Digital signature mode: %s (%i bytes)"
+msgstr ""
+"\n"
+" Режим цифровой подписи: %s (%i байт)"
+
+#: signver.c:152
+#, c-format
+msgid ""
+"\n"
+" Invalid -g parameters\n"
+msgstr ""
+"\n"
+" Ошибка в параметрах ключа -g\n"
+
+#: signver.c:169
+#, c-format
+msgid ""
+"\n"
+" ! Digital signature verification failed - %02x\n"
+msgstr ""
+"\n"
+" ! Ошибка проверки цифровой сигнатуры - %02x\n"
+
+#: util.c:123
+#, c-format
+msgid ""
+"\n"
+"! Invalid firmare monitor version - [%i]%s\n"
+msgstr ""
+"\n"
+"! Неправильная версия монитора прошивки - [%i]%s\n"
+
+#: util.c:137
+#, c-format
+msgid ""
+"\n"
+" Extracting partitions from firmware file:\n"
+"\n"
+" ## Offset    Size     Name\n"
+"-------------------------------------"
+msgstr ""
+"\n"
+" Выделение разделов из файла прошивки:\n"
+"\n"
+" ## Смещение  Размер   Имя\n"
+"-------------------------------------"
+
+#: util.c:173
+#, c-format
+msgid ""
+"\n"
+" Invalid answer length to ^DATAMODE"
+msgstr ""
+"\n"
+" Неправильная длина ответа на ^DATAMODE"
+
+#: util.c:177
+#, c-format
+msgid ""
+"\n"
+" ^DATAMODE command rejected, setting digital signature mode may be required\n"
+msgstr ""
+"\n"
+" Команда ^DATAMODE отвергнута, возможно требуется режим цифровой подписи\n"
+
+#: util.c:206
+#, c-format
+msgid ""
+"\n"
+" No answer from modem in HDLC-mode\n"
+msgstr ""
+"\n"
+" Нет ответа от модема в HDLC-режиме\n"
+
+#: util.c:211
+#, c-format
+msgid ""
+"\n"
+" Error getting protocol version\n"
+msgstr ""
+"\n"
+" Ошибка получения версии протокола\n"
+
+#: util.c:217
+#, c-format
+msgid ""
+"\n"
+" Protocol version: %s"
+msgstr ""
+"\n"
+" Версия протокола: %s"
+
+#: util.c:230
+#, c-format
+msgid ""
+"\n"
+" Rebooting modem...\n"
+msgstr ""
+"\n"
+" Перезагрузка модема...\n"
+
+#: util.c:245
+#, c-format
+msgid ""
+"\n"
+" Device identifier: %s"
+msgstr ""
+"\n"
+" Идентификатор устройства: %s"
+
+#: util.c:256
+#, c-format
+msgid ""
+"\n"
+"\n"
+" ## Offset    Size    Compr.  Name\n"
+"-------------------------------------"
+msgstr ""
+"\n"
+"\n"
+" ## Смещение  Размер  Сжатие  Имя\n"
+"-------------------------------------"
+
+#. ищем разделитель-двоеточие
+#: util.c:276 util.c:282 util.c:285
+#, c-format
+msgid ""
+"\n"
+" Firmware version: %s"
+msgstr ""
+"\n"
+" Версия прошивки: %s"
+
+#: util.c:286
+#, c-format
+msgid ""
+"\n"
+" Platform:         %s"
+msgstr ""
+"\n"
+" Платформа:       %s"
+
+#: util.c:290
+#, c-format
+msgid ""
+"\n"
+" Build date:       %s %s"
+msgstr ""
+"\n"
+" Дата сборки:     %s %s"
+
+#: util.c:291
+#, c-format
+msgid ""
+"\n"
+" Header: version %i, compatibility code: %8.8s"
+msgstr ""
+"\n"
+" Заголовок: версия %i, код соответствия: %8.8s"

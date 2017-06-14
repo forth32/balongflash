@@ -1,0 +1,512 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR forth32
+# This file is distributed under the same license as the balongflash package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: balongflash 3.0.223\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-04-01 13:21+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: balong_flash.c:62
+#, c-format
+msgid ""
+"\n"
+" Flasher tool for USB-modems on Balong V7 chipset\n"
+"\n"
+"%s [option] <file or directory>\n"
+"\n"
+" options:\n"
+"\n"
+"-p <tty> - bootloader serial port%s\n"
+"-n       - flash multiple files from directory\n"
+"-g#      - digital signature mode (use '-gl' to list modes)\n"
+"-m       - print firmware map and exit\n"
+"-e       - split firmware by partitions without headers\n"
+"-s       - split firmware by partitions with headers\n"
+"-k       - do not reboot modem after flashing\n"
+"-r       - reboot modem without flashing\n"
+"-f       - ignore CRC errors in firmware file\n"
+"\n"
+msgstr ""
+
+#: balong_flash.c:76
+msgid " (default is /dev/ttyUSB0)"
+msgstr ""
+
+#: balong_flash.c:124
+#, c-format
+msgid ""
+"\n"
+" Flasher tool for Balong-based devices, V3.0.%i, (c) forth32, 2015, GNU GPLv3"
+msgstr ""
+
+#: balong_flash.c:126
+#, c-format
+msgid ""
+"\n"
+" Windows 32bit port (c) rust3028, 2016"
+msgstr ""
+
+#: balong_flash.c:131
+#, c-format
+msgid ""
+"\n"
+" Options -s and -e are incompatiple\n"
+msgstr ""
+
+#: balong_flash.c:136
+#, c-format
+msgid ""
+"\n"
+" Options -k and -r are incompatiple\n"
+msgstr ""
+
+#: balong_flash.c:141
+#, c-format
+msgid ""
+"\n"
+" Option -n is not compatible with options -s, -m and -e\n"
+msgstr ""
+
+#: balong_flash.c:155
+#, c-format
+msgid ""
+"\n"
+" - Directory is missing\n"
+msgstr ""
+
+#: balong_flash.c:157
+#, c-format
+msgid ""
+"\n"
+" - Filename is missing, use -h for help\n"
+msgstr ""
+
+#: balong_flash.c:168
+#, c-format
+msgid ""
+"\n"
+" Cannot open %s"
+msgstr ""
+
+#: balong_flash.c:188
+#, c-format
+msgid ""
+"\n"
+"\n"
+"! Errors in input file - quitting\n"
+msgstr ""
+
+#: balong_flash.c:211
+#, c-format
+msgid ""
+"\n"
+" Modem is already in HDLC-mode"
+msgstr ""
+
+#: flasher.c:40
+#, c-format
+msgid " - command timeout\n"
+msgstr ""
+
+#: flasher.c:41
+#, c-format
+msgid " - error code %02x\n"
+msgstr ""
+
+#: flasher.c:194
+#, c-format
+msgid ""
+"\n"
+"##  --- Partition name --- written"
+msgstr ""
+
+#: flasher.c:201
+#, c-format
+msgid ""
+"\n"
+"! Partition %i (%s) header rejected"
+msgstr ""
+
+#: flasher.c:214
+#, c-format
+msgid ""
+"\n"
+"! Partition %i (%s) block %i rejected"
+msgstr ""
+
+#: flasher.c:222
+#, c-format
+msgid ""
+"\n"
+"! Error closing partition %i (%s)"
+msgstr ""
+
+#. сбрасываем недочитанный буфер ввода
+#. отсылаем префикс
+#: hdlcio_linux.c:42 hdlcio_win32.c:54
+#, c-format
+msgid ""
+"\n"
+" Error writing command"
+msgstr ""
+
+#: hdlcio_linux.c:76 hdlcio_win32.c:88
+#, c-format
+msgid ""
+"\n"
+"Modem answer is too short: %i bytes, expected %i bytes\n"
+msgstr ""
+
+#: hdlcio_linux.c:195
+#, c-format
+msgid ""
+"\n"
+"! - Cannot open serial port %s\n"
+msgstr ""
+
+#: hdlcio_linux.c:250
+#, c-format
+msgid ""
+"\n"
+" Cannot open directory %s\n"
+msgstr ""
+
+#: hdlcio_linux.c:271 hdlcio_win32.c:358
+#, c-format
+msgid ""
+"\n"
+" Invalid filename format - %s\n"
+msgstr ""
+
+#: hdlcio_linux.c:277 hdlcio_win32.c:364
+#, c-format
+msgid ""
+"\n"
+" Invalid parition identifier - non-digit character - %s\n"
+msgstr ""
+
+#: hdlcio_linux.c:285 hdlcio_win32.c:372
+#, c-format
+msgid ""
+"\n"
+" Error opening file %s\n"
+msgstr ""
+
+#: hdlcio_linux.c:289 hdlcio_win32.c:376
+#, c-format
+msgid ""
+"\n"
+" Error reading file %s\n"
+msgstr ""
+
+#: hdlcio_linux.c:295 hdlcio_win32.c:382
+#, c-format
+msgid ""
+"\n"
+" File %s has a header - cannot flash\n"
+msgstr ""
+
+#: hdlcio_win32.c:256
+#, c-format
+msgid ""
+"\n"
+"\n"
+"Searching for serial port...\n"
+msgstr ""
+
+#: hdlcio_win32.c:261
+#, c-format
+msgid "Port: \"%s\"\n"
+msgstr ""
+
+#: hdlcio_win32.c:265
+#, c-format
+msgid "Port not found!\n"
+msgstr ""
+
+#: hdlcio_win32.c:277
+#, c-format
+msgid ""
+"\n"
+"! - Cannot open serial port COM%s\n"
+msgstr ""
+
+#: hdlcio_win32.c:293 hdlcio_win32.c:306
+#, c-format
+msgid ""
+"\n"
+"! - Serial port initialization failed\n"
+msgstr ""
+
+#: ptable.c:188
+#, c-format
+msgid ""
+"\n"
+"! Partition %s (%02x) - header checksum error"
+msgstr ""
+
+#: ptable.c:196
+#, c-format
+msgid ""
+"\n"
+"! Partition %s (%02x) - invalid checksum block size"
+msgstr ""
+
+#: ptable.c:201
+#, c-format
+msgid ""
+"\n"
+"! Partition %s (%02x) - invalid checksum block"
+msgstr ""
+
+#: ptable.c:216
+#, c-format
+msgid ""
+"\n"
+"! Error uncompressing partition %s (%02x)\n"
+msgstr ""
+
+#: ptable.c:259
+#, c-format
+msgid ""
+"\n"
+" Unable to find partitions - file does not contain a firmware image\n"
+msgstr ""
+
+#: ptable.c:265
+#, c-format
+msgid ""
+"\n"
+" Invalid file header size\n"
+msgstr ""
+
+#: ptable.c:272
+#, c-format
+msgid ""
+"\n"
+" Firmare file code: %i (0x%x)"
+msgstr ""
+
+#: ptable.c:295
+#, c-format
+msgid ""
+"\n"
+" Searching for partition files...\n"
+"\n"
+" ##   Size        ID        Name         File\n"
+"-----------------------------------------------------------------\n"
+msgstr ""
+
+#: ptable.c:306
+#, c-format
+msgid ""
+"\n"
+"! Error allocating memory, partition #%i, size = %i bytes\n"
+msgstr ""
+
+#: ptable.c:313
+#, c-format
+msgid ""
+"\n"
+" Error opening %s"
+msgstr ""
+
+#: ptable.c:321
+#, c-format
+msgid ""
+"\n"
+"! No partition files found in directory %s"
+msgstr ""
+
+#: signver.c:36
+msgid "Main firmware"
+msgstr ""
+
+#: signver.c:37
+msgid "E3372s-stick firmware"
+msgstr ""
+
+#: signver.c:38 signver.c:39
+msgid "WebUI+ISO for HLINK modem"
+msgstr ""
+
+#: signver.c:40
+msgid "ISO (dashboard) for stick modem"
+msgstr ""
+
+#: signver.c:41
+msgid "Firmware+ISO+WebUI"
+msgstr ""
+
+#: signver.c:42
+msgid "Universal"
+msgstr ""
+
+#: signver.c:88
+#, c-format
+msgid ""
+"\n"
+" # length type  description \n"
+"--------------------------------------"
+msgstr ""
+
+#: signver.c:92
+#, c-format
+msgid ""
+"\n"
+"\n"
+" Custom signature parameters can be specified in the following format:\n"
+"  -g *,type,len\n"
+"\n"
+msgstr ""
+
+#: signver.c:111
+#, c-format
+msgid ""
+"\n"
+" -g can be specified only once\n"
+"\n"
+msgstr ""
+
+#: signver.c:134
+#, c-format
+msgid ""
+"\n"
+" -g: unknown firmware type - %i\n"
+msgstr ""
+
+#: signver.c:147
+#, c-format
+msgid ""
+"\n"
+" Digital signature mode: %s (%i bytes)"
+msgstr ""
+
+#: signver.c:152
+#, c-format
+msgid ""
+"\n"
+" Invalid -g parameters\n"
+msgstr ""
+
+#: signver.c:169
+#, c-format
+msgid ""
+"\n"
+" ! Digital signature verification failed - %02x\n"
+msgstr ""
+
+#: util.c:123
+#, c-format
+msgid ""
+"\n"
+"! Invalid firmare monitor version - [%i]%s\n"
+msgstr ""
+
+#: util.c:137
+#, c-format
+msgid ""
+"\n"
+" Extracting partitions from firmware file:\n"
+"\n"
+" ## Offset    Size     Name\n"
+"-------------------------------------"
+msgstr ""
+
+#: util.c:173
+#, c-format
+msgid ""
+"\n"
+" Invalid answer length to ^DATAMODE"
+msgstr ""
+
+#: util.c:177
+#, c-format
+msgid ""
+"\n"
+" ^DATAMODE command rejected, setting digital signature mode may be required\n"
+msgstr ""
+
+#: util.c:206
+#, c-format
+msgid ""
+"\n"
+" No answer from modem in HDLC-mode\n"
+msgstr ""
+
+#: util.c:211
+#, c-format
+msgid ""
+"\n"
+" Error getting protocol version\n"
+msgstr ""
+
+#: util.c:217
+#, c-format
+msgid ""
+"\n"
+" Protocol version: %s"
+msgstr ""
+
+#: util.c:230
+#, c-format
+msgid ""
+"\n"
+" Rebooting modem...\n"
+msgstr ""
+
+#: util.c:245
+#, c-format
+msgid ""
+"\n"
+" Device identifier: %s"
+msgstr ""
+
+#: util.c:256
+#, c-format
+msgid ""
+"\n"
+"\n"
+" ## Offset    Size    Compr.  Name\n"
+"-------------------------------------"
+msgstr ""
+
+#. ищем разделитель-двоеточие
+#: util.c:276 util.c:282 util.c:285
+#, c-format
+msgid ""
+"\n"
+" Firmware version: %s"
+msgstr ""
+
+#: util.c:286
+#, c-format
+msgid ""
+"\n"
+" Platform:         %s"
+msgstr ""
+
+#: util.c:290
+#, c-format
+msgid ""
+"\n"
+" Build date:       %s %s"
+msgstr ""
+
+#: util.c:291
+#, c-format
+msgid ""
+"\n"
+" Header: version %i, compatibility code: %8.8s"
+msgstr ""
