@@ -108,7 +108,7 @@ uint32_t signlen;  // длина подписи
 
 if (gflag != 0) {
   printf(_("\n -g can be specified only once\n\n"));
-  exit(0);
+  exit(-1);
 }  
 
 strcpy(parm,sparm); // локальная копия параметров
@@ -131,7 +131,7 @@ if (strncmp(parm,"*,",2) == 0) {
   signtype=atoi(sptr+1);
   if (fw_description(signtype) == 0) {
     printf(_("\n -g: unknown firmware type - %i\n"),signtype);
-    exit(0);
+    exit(-1);
   }  
 }
 else {  
@@ -149,7 +149,7 @@ return;
 
 perror:
  printf(_("\n Invalid -g parameters\n"));
- exit(0);
+ exit(-1);
 } 
   
 
@@ -166,5 +166,6 @@ uint8_t replybuf[200];
 res=atcmd(signver,replybuf);
 if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
    printf(_("\n ! Digital signature verification failed - %02x\n"),replybuf[2]);
+   exit(-2);
 }
 }

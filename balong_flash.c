@@ -38,7 +38,7 @@ int npart=0; // число разделов в таблице
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-void main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 
 unsigned int opt;
 int res;
@@ -75,7 +75,7 @@ printf(_("\n Flasher tool for USB-modems on Balong V7 chipset\n\n"
         ""
 #endif
 );
-    return;
+    return 0;
 
    case 'p':
     strcpy(devname,optarg);
@@ -115,7 +115,7 @@ printf(_("\n Flasher tool for USB-modems on Balong V7 chipset\n\n"
      
    case '?':
    case ':':  
-     return;
+     return -1;
   }
 }  
 printf(_("\n Flasher tool for Balong-based devices, V3.0.%i, (c) forth32, 2015, GNU GPLv3"), BUILDNO);
@@ -126,17 +126,17 @@ printf("\n----------------------------------------------------------------------
 
 if (eflag&sflag) {
   printf(_("\n Options -s and -e are incompatiple\n"));
-  return;
+  return -1;
 }  
 
 if (kflag&rflag) {
   printf(_("\n Options -k and -r are incompatiple\n"));
-  return;
+  return -1;
 }  
 
 if (nflag&(eflag|sflag|mflag)) {
   printf(_("\n Option -n is not compatible with options -s, -m and -e\n"));
-  return;
+  return -1;
 }  
   
 
@@ -152,7 +152,7 @@ if (optind>=argc) {
     printf(_("\n - Directory is missing\n"));
   else 
     printf(_("\n - Filename is missing, use -h for help\n"));
-  return;
+  return -1;
 }  
 
 if (nflag) 
@@ -163,7 +163,7 @@ else {
 in=fopen(argv[optind],"rb");
 if (in == 0) {
   printf(_("\n Cannot open %s"),argv[optind]);
-  return;
+  return -1;
 }
 }
 
@@ -183,14 +183,14 @@ if (mflag) show_file_map();
 // выход по ошибкам CRC
 if (!fflag && errflag) {
     printf(_("\n\n! Errors in input file - quitting\n"));
-    return; 
+    return -1; 
 }
 
 //------- Режим разрезания файла прошивки
 if (eflag|sflag) {
   fwsplit(sflag);
   printf("\n");
-  return;
+  return 0;
 }
 
 sio:
@@ -203,7 +203,7 @@ open_port(devname);
 // Определяем режим порта и версию dload-протокола
 
 res=dloadversion();
-if (res == -1) return;
+if (res == -1) return -2;
 if (res == 0) {
   printf(_("\n Modem is already in HDLC-mode"));
   goto hdlc;

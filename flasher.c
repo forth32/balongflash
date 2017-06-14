@@ -199,7 +199,7 @@ printf("\n");
  if (!dload_start(ptable[part].hd.code,ptable[part].hd.psize)) {
    printf(_("\n! Partition %i (%s) header rejected"),part,ptable[part].pname);
    printerr();
-   return;
+   exit(-2);
  }  
     
  maxblock=(ptable[part].hd.psize+(fblock-1))/fblock; // число блоков в разделе
@@ -212,7 +212,7 @@ printf("\n");
   if (!dload_block(part,blk,ptable[part].pimage)) {
    printf(_("\n! Partition %i (%s) block %i rejected"),part,ptable[part].pname,blk);
    printerr();
-   return;
+   exit(-2);
   }  
  }    
 
@@ -220,7 +220,7 @@ printf("\n");
  if (!dload_end(ptable[part].hd.code,ptable[part].hd.psize)) {
    printf(_("\n! Error closing partition %i (%s)"),part,ptable[part].pname);
    printerr();
-   return;
+   exit(-2);
  }  
 } // конец цикла по разделам
 }

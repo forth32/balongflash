@@ -170,11 +170,11 @@ usleep(100000);
 res=atcmd("^DATAMODE",replybuf);
 if (res != 6) {
   printf(_("\n Invalid answer length to ^DATAMODE"));
-  exit(0);
+  exit(-2);
 }  
 if (memcmp(replybuf,OKrsp,6) != 0) {
   printf(_("\n ^DATAMODE command rejected, setting digital signature mode may be required\n"));
-  exit(0);
+  exit(-2);
 }  
 }
 
@@ -203,12 +203,12 @@ unsigned char cmdver[7]={0x0c};           // команда запроса ве�
 iolen=send_cmd(cmdver,1,replybuf);
 if (iolen == 0) {
   printf(_("\n No answer from modem in HDLC-mode\n"));
-  exit(0);
+  exit(-2);
 }  
 if (replybuf[0] == 0x7e) memcpy(replybuf,replybuf+1,iolen-1);
 if (replybuf[0] != 0x0d) {
   printf(_("\n Error getting protocol version\n"));
-  exit(0);
+  exit(-2);
 }  
   
 i=replybuf[1];
