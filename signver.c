@@ -1,4 +1,5 @@
 // 
+
 // Процедуры обработки цифровых подписей
 // 
 #include <stdio.h>
@@ -39,25 +40,20 @@ struct {
   {6,1110,"Вебинтерфейс+ISO для HLINK-модема"},
   {2,846,"ISO (dashboard) для stick-модема"},
   {7,3750,"Прошивка+ISO+вебинтерфейс"},
-  {99,3750,"универсальная"},
 };
 
-#define signbaselen 7
+#define signbaselen 6
 
 // таблица типов подписей
-struct {
-  uint8_t code;
-  char* descr;
-} fwtypes[]={
-  {1,"ONLY_FW"},
-  {2,"ONLY_ISO"},
-  {3,"FW_ISO"},
-  {4,"ONLY_WEBUI"},
-  {5,"FW_WEBUI"},
-  {6,"ISO_WEBUI"},
-  {7,"FW_ISO_WEBUI"},
-  {99,"COMPONENT_MAX"},
-  {0,0}
+char* fwtypes[]={
+"UNKNOWN",        // 0
+"ONLY_FW",        // 1
+"ONLY_ISO",       // 2
+"FW_ISO",         // 3
+"ONLY_WEBUI",     // 4
+"FW_WEBUI",       // 5
+"ISO_WEBUI",      // 6
+"FW_ISO_WEBUI"    // 7
 };  
 
 
@@ -72,11 +68,7 @@ extern int gflag;
 //****************************************************
 char* fw_description(uint8_t code) {
   
-int i;  
-for (i=0; (fwtypes[i].code != 0); i++) {
-  if (code == fwtypes[i].code) return fwtypes[i].descr;
-}
-return 0;
+return fwtypes[code&0x7];  
 }
 
 //****************************************************
@@ -169,4 +161,25 @@ if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
    printf("\n ! Ошибка проверки цифровой сигнатуры - %02x\n",replybuf[2]);
    exit(-2);
 }
+}
+
+//***************************************************
+//* Поиск цифровой подписи в прошивке
+//***************************************************
+int32_t serach_sign() {
+
+int i;
+uint32_t pt;
+uint32_t signsize;
+
+for (i=0;i<2;i++) {
+  pt=*((uint32_t*)&ptable[i].pimage[ptable[i].hd.psize-4]);
+  if (pt == 0xffaaaffa) { 
+    // подпись найдена
+    signsize=*((uint32_t*)&ptable[i].pimage[ptable[i].hd.psize-12]);
+    return signsize;
+  }
+}
+// не найдена
+return -1;
 }

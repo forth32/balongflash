@@ -15,7 +15,9 @@
 #include "ptable.h"
 #include "hdlcio.h"
 #include "util.h"
+#include "signver.h"
 
+extern int dload_id;
 
 //******************************************************
 //*  поиск символического имени раздела по его коду
@@ -246,6 +248,7 @@ int findparts(FILE* in) {
 
 // буфер префикса BIN-файла
 uint8_t prefix[0x5c];
+int32_t signsize;
 
 // Маркер начала заголовка раздела	      
 const unsigned int dpattern=0xa55aaa55;
@@ -269,7 +272,12 @@ fseek(in,-0x60,SEEK_CUR); // отъезжаем на начало BIN-файла
 
 // вынимаем префикс
 fread(prefix,0x5c,1,in);
-printf("\n Код файла прошивки: %i (0x%x)",*((uint32_t*)&prefix[0]),*((uint32_t*)&prefix[0]));
+dload_id=*((uint32_t*)&prefix[0]);
+if (dload_id > 0xf) {
+  printf("\n Неверный код типа прошивки (dload_id) в заголовке - %x",dload_id);
+  exit(0);
+}  
+printf("\n Код файла прошивки: %x (%s)",dload_id,fw_description(dload_id));
 
 // поиск остальных разделов
 
@@ -279,7 +287,16 @@ do {
   fseek(in,-4,SEEK_CUR);            // отъезжаем назад, на начало заголовка
   extract(in);                      // извлекаем раздел
 } while(1);
-  
+
+// ищем цифровую подпись
+signsize=serach_sign();
+if (signsize == -1) printf("\n Цифровая подпись: не найдена");
+else printf("\n Цифровая подпись: %i байт",signsize);
+if (((signsize == -1) && (dload_id>7)) ||
+    ((signsize != -1) && (dload_id<8))) 
+    printf("\n ! ВНИМАНИЕ: Наличие цифровой подписи не соответствует коду типа прошивки: %02x",dload_id);
+
+
 return npart;
 }
 
