@@ -247,6 +247,7 @@ int findparts(FILE* in) {
 // буфер префикса BIN-файла
 uint8_t prefix[0x5c];
 int32_t signsize;
+int32_t hd_dload_id;
 
 // Маркер начала заголовка раздела	      
 const unsigned int dpattern=0xa55aaa55;
@@ -270,12 +271,14 @@ fseek(in,-0x60,SEEK_CUR); // отъезжаем на начало BIN-файла
 
 // вынимаем префикс
 fread(prefix,0x5c,1,in);
-dload_id=*((uint32_t*)&prefix[0]);
+hd_dload_id=*((uint32_t*)&prefix[0]);
+// если принудительно dload_id не установлен - выбираем его из заголовка
+if (dload_id == -1) dload_id=hd_dload_id;
 if (dload_id > 0xf) {
   printf("\n Неверный код типа прошивки (dload_id) в заголовке - %x",dload_id);
   exit(0);
 }  
-printf("\n Код файла прошивки: %x (%s)",dload_id,fw_description(dload_id));
+printf("\n Код файла прошивки: %x (%s)",hd_dload_id,fw_description(hd_dload_id));
 
 // поиск остальных разделов
 
