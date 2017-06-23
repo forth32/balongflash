@@ -63,6 +63,12 @@ uint8_t signver[200];
 // Флаг режима цифровой подписи
 extern int gflag;
 
+// Параметры текущей цифровой подписи
+uint32_t signtype; // тип прошивки
+uint32_t signlen;  // длина подписи
+
+int32_t serach_sign();
+
 //****************************************************
 //* Получение описания типа прошивки по коду
 //****************************************************
@@ -94,10 +100,6 @@ int index;
 char* sptr;
 char parm[100];
 
-// Параметры текущей цифровой подписи
-uint32_t signtype; // тип прошивки
-uint32_t signlen;  // длина подписи
-
 
 if (gflag != 0) {
   printf("\n Дублирующийся ключ -g\n\n");
@@ -110,6 +112,12 @@ if (parm[0] == 'l') {
   glist();
   exit(0);
 }  
+
+if (parm[0] == 'd') {
+  // запрет автоопределения подписи
+  gflag = -1;
+  return;
+} 
 
 if (strncmp(parm,"*,",2) == 0) {
   // произвольные параметры
@@ -135,8 +143,6 @@ else {
 }
 
 gflag=1;
-sprintf(signver,"^SIGNVER=%i,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,%i",signtype,signlen);
-printf("\n Режим цифровой подписи: %s (%i байт)",fw_description(signtype),signlen);
 // printf("\nstr - %s",signver);
 return;
 
@@ -156,6 +162,15 @@ uint32_t res;
 unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 uint8_t replybuf[200];
   
+if (gflag == 0) {
+  // автоопределение цифровой подписи
+  signtype=dload_id|0x80;
+  signlen=serach_sign();
+  if (signlen == -1) return; // подпись в файле не найдена
+}
+
+printf("\n Режим цифровой подписи: %s (%i байт)",fw_description(signtype),signlen);
+sprintf(signver,"^SIGNVER=%i,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,%i",signtype,signlen);
 res=atcmd(signver,replybuf);
 if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
    printf("\n ! Ошибка проверки цифровой сигнатуры - %02x\n",replybuf[2]);

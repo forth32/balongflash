@@ -47,3 +47,5 @@ int findparts(FILE* in);
 void  find_pname(unsigned int id,unsigned char* pname);
 void findfiles (char* fdir);
 uint32_t psize(int n);
+
+extern int dload_id;
