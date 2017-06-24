@@ -203,9 +203,9 @@ uint32_t res;
 unsigned char SVrsp[]={0x0d, 0x0a, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x4f, 0x4b, 0x0d, 0x0a};
 uint8_t replybuf[200];
   
-if (gflag == 0) {
+if (gflag == 0) {  
   // автоопределение цифровой подписи
-  signtype=dload_id|0x80;
+  signtype=dload_id&0x7;
   signlen=serach_sign();
   if (signlen == -1) return; // подпись в файле не найдена
 }
