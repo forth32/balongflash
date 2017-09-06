@@ -72,6 +72,9 @@ uint32_t signlen;  // длина подписи
 
 int32_t serach_sign();
 
+// Хеш открытого ключа для ^signver
+char signver_hash[100]="778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697";
+
 //****************************************************
 //* Получение описания типа прошивки по коду
 //****************************************************
@@ -211,7 +214,7 @@ if (gflag == 0) {
 }
 
 printf("\n Режим цифровой подписи: %s (%i байт)",fw_description(signtype),signlen);
-sprintf(signver,"^SIGNVER=%i,0,778A8D175E602B7B779D9E05C330B5279B0661BF2EED99A20445B366D63DD697,%i",signtype,signlen);
+sprintf(signver,"^SIGNVER=%i,0,%s,%i",signtype,signver_hash,signlen);
 res=atcmd(signver,replybuf);
 if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
    printf("\n ! Ошибка проверки цифровой сигнатуры - %02x\n",replybuf[2]);
@@ -224,7 +227,7 @@ if ( (res<sizeof(SVrsp)) || (memcmp(replybuf,SVrsp,sizeof(SVrsp)) != 0) ) {
 //***************************************************
 int32_t serach_sign() {
 
-int i;
+int i,j;
 uint32_t pt;
 uint32_t signsize;
 
@@ -233,6 +236,11 @@ for (i=0;i<2;i++) {
   if (pt == 0xffaaaffa) { 
     // подпись найдена
     signsize=*((uint32_t*)&ptable[i].pimage[ptable[i].hd.psize-12]);
+    // выделяем хеш открытого ключа
+    for(j=0;j<32;j++) {
+     sprintf(signver_hash+2*j,"%02x",ptable[i].pimage[ptable[i].hd.psize-signsize+6+j]);
+    }
+    printf("\n Хеш открытого ключа: %s",signver_hash);
     return signsize;
   }
 }
