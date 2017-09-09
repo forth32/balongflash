@@ -1,3 +1,6 @@
+extern char signver_hash[100];
+
+
 void glist();
 void gparm(char* sparm);
 void dparm(char* sparm);

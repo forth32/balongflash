@@ -238,9 +238,8 @@ for (i=0;i<2;i++) {
     signsize=*((uint32_t*)&ptable[i].pimage[ptable[i].hd.psize-12]);
     // выделяем хеш открытого ключа
     for(j=0;j<32;j++) {
-     sprintf(signver_hash+2*j,"%02x",ptable[i].pimage[ptable[i].hd.psize-signsize+6+j]);
+     sprintf(signver_hash+2*j,"%02X",ptable[i].pimage[ptable[i].hd.psize-signsize+6+j]);
     }
-    printf("\n Хеш открытого ключа: %s",signver_hash);
     return signsize;
   }
 }

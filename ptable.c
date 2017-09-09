@@ -293,7 +293,10 @@ do {
 // ищем цифровую подпись
 signsize=serach_sign();
 if (signsize == -1) printf("\n Цифровая подпись: не найдена");
-else printf("\n Цифровая подпись: %i байт",signsize);
+else {
+  printf("\n Цифровая подпись: %i байт",signsize);
+  printf("\n Хеш открытого ключа: %s",signver_hash);
+}
 if (((signsize == -1) && (dload_id>7)) ||
     ((signsize != -1) && (dload_id<8))) 
     printf("\n ! ВНИМАНИЕ: Наличие цифровой подписи не соответствует коду типа прошивки: %02x",dload_id);
