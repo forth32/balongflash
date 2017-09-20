@@ -252,12 +252,25 @@ void show_file_map() {
 
 int i;  
   
-printf("\n\n ## Смещение  Размер  Сжатие  Имя\n-------------------------------------");
+printf("\n\n ## Смещение  Размер    Сжатие     Имя\n-----------------------------------------------");
 for (i=0;i<npart;i++) { 
-     printf("\n %02i %08x %8i",i,ptable[i].offset,ptable[i].hd.psize);
-     if (ptable[i].zflag == 0) printf("        ");
-     else printf("  %3i%%   ",(ptable[i].hd.psize-ptable[i].zflag)*100/ptable[i].hd.psize);
-     printf("%s",ptable[i].pname); 
+     printf("\n %02i %08x %8i  ",i,ptable[i].offset,ptable[i].hd.psize);
+     if (ptable[i].zflag == 0) 
+       // несжатый раздел
+       printf("           ");
+     else {
+       // сжатый раздел
+       switch(ptable[i].ztype) {
+	 case 'L':
+           printf("Lzma");
+	   break;
+	 case 'Z':  
+           printf("Gzip");
+	   break;
+       }   
+       printf(" %3i%%  ",(ptable[i].hd.psize-ptable[i].zflag)*100/ptable[i].hd.psize);
+     }  
+     printf(" %s",ptable[i].pname); 
 }   
  printf("\n");
  exit(0);

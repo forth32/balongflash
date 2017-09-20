@@ -17,6 +17,8 @@
 #include "util.h"
 #include "signver.h"
 
+int32_t lzma_decode(uint8_t* inbuf,uint32_t fsize,uint8_t* outbuf);
+
 //******************************************************
 //*  поиск символического имени раздела по его коду
 //******************************************************
@@ -160,9 +162,8 @@ uint16_t hcrc,crc;
 uint16_t* crcblock;
 uint32_t crcblocksize;
 uint8_t* zbuf;
-long unsigned int zlen;
+long int zlen;
 int res;
-
 
 ptable[npart].zflag=0; 
 // читаем заголовок в структуру
@@ -205,7 +206,10 @@ else if (memcmp(crcblock,ptable[npart].csumblock,crcblocksize) != 0) {
   
 free(crcblock);
 
+
+ptable[npart].ztype=' ';
 // Определение zlib-сжатия
+
 
 if ((*(uint16_t*)ptable[npart].pimage) == 0xda78) {
   ptable[npart].zflag=ptable[npart].hd.psize;  // сохраняем сжатый размер 
@@ -226,9 +230,38 @@ if ((*(uint16_t*)ptable[npart].pimage) == 0xda78) {
   // перерассчитываем контрольные суммы
   calc_crc16(npart);
   ptable[npart].hd.crc=crc16((uint8_t*)&ptable[npart].hd,sizeof(struct pheader));
+  ptable[npart].ztype='Z';
+}
+
+// Определение lzma-сжатия
+
+if ((ptable[npart].pimage[0] == 0x5d) && (*(uint64_t*)(ptable[npart].pimage+5) == 0xffffffffffffffff)) {
+  ptable[npart].zflag=ptable[npart].hd.psize;  // сохраняем сжатый размер 
+  zlen=52428800;
+  zbuf=malloc(zlen);  // буфер в 50М
+  // распаковываем образ раздела
+  zlen=lzma_decode(ptable[npart].pimage, ptable[npart].hd.psize, zbuf);
+  if (zlen>52428800) {
+    printf("\n Превышен размер буфера\n");
+    exit(1);
+  }  
+  if (res == -1) {
+    printf("\n! Ошибка распаковки раздела %s (%02x)\n",ptable[npart].pname,ptable[npart].hd.code>>16);
+    errflag=1;
+  }
+  // создаем новый буфер образа раздела и копируем в него рапаковынные данные
+  free(ptable[npart].pimage);
+  ptable[npart].pimage=malloc(zlen);
+  memcpy(ptable[npart].pimage,zbuf,zlen);
+  ptable[npart].hd.psize=zlen;
+  free(zbuf);
+  // перерассчитываем контрольные суммы
+  calc_crc16(npart);
+  ptable[npart].hd.crc=crc16((uint8_t*)&ptable[npart].hd,sizeof(struct pheader));
+  ptable[npart].ztype='L';
 }
   
-
+  
 // продвигаем счетчик разделов
 npart++;
 
@@ -253,6 +286,7 @@ int32_t hd_dload_id;
 // Маркер начала заголовка раздела	      
 const unsigned int dpattern=0xa55aaa55;
 unsigned int i;
+
 
 // поиск начала цепочки разделов в файле
 while (fread(&i,1,4,in) == 4) {
@@ -279,16 +313,18 @@ if (dload_id > 0xf) {
   printf("\n Неверный код типа прошивки (dload_id) в заголовке - %x",dload_id);
   exit(0);
 }  
-printf("\n Код файла прошивки: %x (%s)",hd_dload_id,fw_description(hd_dload_id));
+printf("\n Код файла прошивки: %x (%s)\n",hd_dload_id,fw_description(hd_dload_id));
 
 // поиск остальных разделов
 
 do {
+  printf("\r Поиск раздела # %i",npart); fflush(stdout);	
   if (fread(&i,1,4,in) != 4) break; // конец файла
   if (i != dpattern) break;         // образец не найден - конец цепочки разделов
   fseek(in,-4,SEEK_CUR);            // отъезжаем назад, на начало заголовка
   extract(in);                      // извлекаем раздел
 } while(1);
+printf("\r                                 \r");
 
 // ищем цифровую подпись
 signsize=serach_sign();
