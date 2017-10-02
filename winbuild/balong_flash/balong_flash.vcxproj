@@ -103,6 +103,8 @@ type $(ProjectDir)..\..\build &gt;&gt; $(ProjectDir)buildno.h</Command>
     <ClCompile Include="..\..\balong_flash.c" />
     <ClCompile Include="..\..\flasher.c" />
     <ClCompile Include="..\..\hdlcio_win32.c" />
+    <ClCompile Include="..\..\lzma\Alloc.c" />
+    <ClCompile Include="..\..\lzma\LzmaDec.c" />
     <ClCompile Include="..\..\ptable.c" />
     <ClCompile Include="..\..\signver.c" />
     <ClCompile Include="..\..\util.c" />
