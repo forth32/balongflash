@@ -232,6 +232,7 @@ uint32_t pt;
 uint32_t signsize;
 
 for (i=0;i<2;i++) {
+  if (i == npart) break;
   pt=*((uint32_t*)&ptable[i].pimage[ptable[i].hd.psize-4]);
   if (pt == 0xffaaaffa) { 
     // подпись найдена
