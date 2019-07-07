@@ -307,7 +307,7 @@ fseek(in,-0x60,SEEK_CUR); // отъезжаем на начало BIN-файла
 
 // вынимаем префикс
 fread(prefix,0x5c,1,in);
-hd_dload_id=*((uint32_t*)&prefix[0]);
+hd_dload_id=prefix[0];
 // если принудительно dload_id не установлен - выбираем его из заголовка
 if (dload_id == -1) dload_id=hd_dload_id;
 if (dload_id > 0xf) {
