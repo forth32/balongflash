@@ -367,7 +367,7 @@ for (npart=0;npart<30;npart++) {
     }
     
     // читаем образ в буфер
-    in=fopen(filename,"r");
+    in=fopen(filename,"rb");
     if (in == 0) {
       printf("\n Ошибка открытия файла %s",filename);
       return;
