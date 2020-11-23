@@ -238,11 +238,11 @@ if ((*(uint16_t*)ptable[npart].pimage) == 0xda78) {
 
 if ((ptable[npart].pimage[0] == 0x5d) && (*(uint64_t*)(ptable[npart].pimage+5) == 0xffffffffffffffff)) {
   ptable[npart].zflag=ptable[npart].hd.psize;  // сохраняем сжатый размер 
-  zlen=52428800;
-  zbuf=malloc(zlen);  // буфер в 50М
+  zlen=100 * 1024 * 1024;
+  zbuf=malloc(zlen);  // буфер в 100М
   // распаковываем образ раздела
   zlen=lzma_decode(ptable[npart].pimage, ptable[npart].hd.psize, zbuf);
-  if (zlen>52428800) {
+  if (zlen>100 * 1024 * 1024) {
     printf("\n Превышен размер буфера\n");
     exit(1);
   }  
