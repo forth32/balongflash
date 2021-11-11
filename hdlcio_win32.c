@@ -215,6 +215,9 @@ static int find_port(int* port_no, char* port_name)
         (
          strstr(_strupr(property_buffer), "VID_12D1&PID_1442") != NULL &&
          strstr(_strupr(property_buffer), "&MI_00") != NULL
+        ) ||
+        (
+         strstr(_strupr(property_buffer), "VID_12D1&PID_2020") != NULL
         )
        )
     {
